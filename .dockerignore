@@ -1,0 +1,38 @@
+# Git関連
+.git
+.gitignore
+
+# Python関連
+__pycache__
+*.pyc
+*.pyo
+*.pyd
+.Python
+env
+pip-log.txt
+pip-delete-this-directory.txt
+.tox
+.coverage
+.coverage.*
+.cache
+nosetests.xml
+coverage.xml
+*.cover
+*.log
+.venv/
+.pytest_cache/
+
+# IDEやエディタ関連
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# macOS関連
+.DS_Store
+
+# その他
+README.md
+LICENSE
+*.md
