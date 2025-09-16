@@ -128,13 +128,20 @@ st.markdown('''
     background: #45a049;
 }
 
+.flex-link-container {
+    text-align: left;
+    padding: 0.25rem 0;
+}
+
 .flex-link {
+    display: inline-block;
     color: rgba(255, 255, 255, 0.9);
-    font-size: 0.9rem;
+    font-size: 0.75rem;
     cursor: pointer;
-    text-align: center;
-    padding: 0.5rem;
+    padding: 0.2rem 0.4rem;
+    border-radius: 0.2rem;
     transition: color 0.2s ease;
+    width: fit-content;
 }
 
 .flex-link:hover {
@@ -155,7 +162,9 @@ st.markdown('''
         <input type="password" id="password" class="flex-input">
     </div>
     <button onclick="handleLogin()" class="flex-button">ログイン</button>
-    <div onclick="handleSignin()" class="flex-link">サインイン</div>
+    <div class="flex-link-container">
+        <span onclick="handleSignin()" class="flex-link">サインイン</span>
+    </div>
 </div>
 ''', unsafe_allow_html=True)
 
