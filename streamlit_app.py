@@ -69,23 +69,23 @@ st.markdown('''
 </div>
 ''', unsafe_allow_html=True)
 
-# パスワード入力欄を別途追加
+# パスワード入力欄を枠内に配置
 st.markdown('''
-<div style="position: fixed; top: 56%; left: 50%; transform: translateX(-50%); width: 270px; z-index: 1001;">
+<div style="position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 270px; margin-top: 40px; z-index: 1001;">
     <input type="password" id="password" placeholder="パスワード" style="width: 100%; padding: 12px; margin: 5px 0; border: none; border-radius: 5px; font-size: 14px; background: rgba(255, 255, 255, 0.95); box-sizing: border-box;">
 </div>
 ''', unsafe_allow_html=True)
 
-# ログインボタンを別途追加
+# ログインボタンを枠内に配置
 st.markdown('''
-<div style="position: fixed; top: 62%; left: 50%; transform: translateX(-50%); width: 270px; z-index: 1001;">
+<div style="position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 270px; margin-top: 90px; z-index: 1001;">
     <button onclick="handleLogin()" style="width: 100%; padding: 12px; margin: 5px 0; border: none; border-radius: 5px; background: #4CAF50; color: white; font-size: 16px; font-weight: bold; cursor: pointer; box-sizing: border-box;">ログイン</button>
 </div>
 ''', unsafe_allow_html=True)
 
-# サインインリンクを別途追加
+# サインインリンクを枠内に配置
 st.markdown('''
-<div style="position: fixed; top: 68%; left: 50%; transform: translateX(-50%); width: 270px; z-index: 1001; text-align: center;">
+<div style="position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 270px; margin-top: 140px; z-index: 1001; text-align: center;">
     <div onclick="handleSignin()" style="color: rgba(255, 255, 255, 0.9); font-size: 14px; cursor: pointer; margin-top: 10px;">サインイン</div>
 </div>
 ''', unsafe_allow_html=True)
