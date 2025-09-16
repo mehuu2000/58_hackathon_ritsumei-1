@@ -75,9 +75,9 @@ st.markdown('''
     background: rgba(70, 70, 70, 0.85);
     padding: 1.5rem;
     border-radius: 0.6rem;
-    min-width: 20rem;
+    min-width: 24rem;
     max-width: 90vw;
-    width: fit-content;
+    width: 28rem;
     z-index: 1000;
     box-sizing: border-box;
     display: flex;
