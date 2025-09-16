@@ -85,13 +85,26 @@ st.markdown('''
     gap: 1rem;
 }
 
+.flex-input-group {
+    display: flex;
+    flex-direction: column;
+    gap: 0.3rem;
+}
+
+.flex-label {
+    font-size: 0.8rem;
+    color: rgba(255, 255, 255, 0.9);
+    font-weight: 500;
+    margin-left: 0.2rem;
+}
+
 .flex-input {
     flex: 1;
     padding: 0.75rem;
     border: none;
     border-radius: 0.3rem;
     font-size: 0.9rem;
-    background: rgba(255, 255, 255, 0.95);
+    background: rgba(240, 240, 240, 0.95);
     box-sizing: border-box;
     min-width: 0;
 }
@@ -133,8 +146,14 @@ st.markdown('''
 # 短いHTMLでフォームを作成
 st.markdown('''
 <div class="flex-form">
-    <input type="email" id="email" placeholder="メールアドレス（ログイン用ID）" class="flex-input">
-    <input type="password" id="password" placeholder="パスワード" class="flex-input">
+    <div class="flex-input-group">
+        <label class="flex-label">メールアドレス（ログイン用ID）</label>
+        <input type="email" id="email" class="flex-input">
+    </div>
+    <div class="flex-input-group">
+        <label class="flex-label">パスワード</label>
+        <input type="password" id="password" class="flex-input">
+    </div>
     <button onclick="handleLogin()" class="flex-button">ログイン</button>
     <div onclick="handleSignin()" class="flex-link">サインイン</div>
 </div>
