@@ -35,16 +35,18 @@ st.markdown("""
     /* アプリ名 */
     .app-title {
         position: fixed;
-        top: 100px;
+        top: 15vh;
         left: 50%;
         transform: translateX(-50%);
         background: rgba(230, 230, 230, 0.9);
-        padding: 10px 25px;
-        font-size: 18px;
+        padding: 0.6rem 1.5rem;
+        font-size: clamp(1rem, 4vw, 1.2rem);
         color: #333;
-        border-radius: 5px;
+        border-radius: 0.3rem;
         z-index: 999;
         font-weight: normal;
+        white-space: nowrap;
+        box-sizing: border-box;
     }
 </style>
 """, unsafe_allow_html=True)
@@ -62,31 +64,79 @@ st_folium(background_map, width='100%', height=800, returned_objects=[], key="bg
 # アプリ名
 st.markdown('<div class="app-title">アプリ名</div>', unsafe_allow_html=True)
 
-# フォームHTMLを短く分割して記述（メール入力欄は動作していた）
+# CSSでFlexboxスタイルを定義
 st.markdown('''
-<div style="position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); background: rgba(70, 70, 70, 0.85); padding: 25px; border-radius: 10px; width: 320px; z-index: 1000; box-sizing: border-box;">
-    <input type="email" id="email" placeholder="メールアドレス（ログイン用ID）" style="width: 100%; padding: 12px; margin: 5px 0; border: none; border-radius: 5px; font-size: 14px; background: rgba(255, 255, 255, 0.95); box-sizing: border-box;">
-</div>
+<style>
+.flex-form {
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    background: rgba(70, 70, 70, 0.85);
+    padding: 1.5rem;
+    border-radius: 0.6rem;
+    min-width: 20rem;
+    max-width: 90vw;
+    width: fit-content;
+    z-index: 1000;
+    box-sizing: border-box;
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+}
+
+.flex-input {
+    flex: 1;
+    padding: 0.75rem;
+    border: none;
+    border-radius: 0.3rem;
+    font-size: 0.9rem;
+    background: rgba(255, 255, 255, 0.95);
+    box-sizing: border-box;
+    min-width: 0;
+}
+
+.flex-button {
+    flex: 1;
+    padding: 0.75rem;
+    border: none;
+    border-radius: 0.3rem;
+    background: #4CAF50;
+    color: white;
+    font-size: 1rem;
+    font-weight: bold;
+    cursor: pointer;
+    box-sizing: border-box;
+    transition: background-color 0.2s ease;
+    min-width: 0;
+}
+
+.flex-button:hover {
+    background: #45a049;
+}
+
+.flex-link {
+    color: rgba(255, 255, 255, 0.9);
+    font-size: 0.9rem;
+    cursor: pointer;
+    text-align: center;
+    padding: 0.5rem;
+    transition: color 0.2s ease;
+}
+
+.flex-link:hover {
+    color: white;
+}
+</style>
 ''', unsafe_allow_html=True)
 
-# パスワード入力欄を枠内に配置
+# 短いHTMLでフォームを作成
 st.markdown('''
-<div style="position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 270px; margin-top: 40px; z-index: 1001;">
-    <input type="password" id="password" placeholder="パスワード" style="width: 100%; padding: 12px; margin: 5px 0; border: none; border-radius: 5px; font-size: 14px; background: rgba(255, 255, 255, 0.95); box-sizing: border-box;">
-</div>
-''', unsafe_allow_html=True)
-
-# ログインボタンを枠内に配置
-st.markdown('''
-<div style="position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 270px; margin-top: 90px; z-index: 1001;">
-    <button onclick="handleLogin()" style="width: 100%; padding: 12px; margin: 5px 0; border: none; border-radius: 5px; background: #4CAF50; color: white; font-size: 16px; font-weight: bold; cursor: pointer; box-sizing: border-box;">ログイン</button>
-</div>
-''', unsafe_allow_html=True)
-
-# サインインリンクを枠内に配置
-st.markdown('''
-<div style="position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 270px; margin-top: 140px; z-index: 1001; text-align: center;">
-    <div onclick="handleSignin()" style="color: rgba(255, 255, 255, 0.9); font-size: 14px; cursor: pointer; margin-top: 10px;">サインイン</div>
+<div class="flex-form">
+    <input type="email" id="email" placeholder="メールアドレス（ログイン用ID）" class="flex-input">
+    <input type="password" id="password" placeholder="パスワード" class="flex-input">
+    <button onclick="handleLogin()" class="flex-button">ログイン</button>
+    <div onclick="handleSignin()" class="flex-link">サインイン</div>
 </div>
 ''', unsafe_allow_html=True)
 
