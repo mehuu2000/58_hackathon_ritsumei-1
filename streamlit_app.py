@@ -27,15 +27,59 @@ st.markdown("""
     .stDeployButton {display: none !important;}
     section[data-testid="stSidebar"] {display: none !important;}
     
-    /* 全体レイアウト */
+    /* 完全フルスクリーン */
+    html, body {
+        margin: 0 !important;
+        padding: 0 !important;
+        height: 100% !important;
+        overflow: hidden !important;
+    }
+    
+    .stApp {
+        margin: 0 !important;
+        padding: 0 !important;
+        height: 100vh !important;
+        overflow: hidden !important;
+    }
+    
     .stAppViewContainer {
         padding: 0 !important;
+        margin: 0 !important;
         max-width: 100% !important;
+        height: 100vh !important;
+        top: 0 !important;
+        left: 0 !important;
+        position: absolute !important;
+    }
+    
+    .main {
+        padding: 0 !important;
+        margin: 0 !important;
+        height: 100vh !important;
     }
     
     .main .block-container {
         padding: 0 !important;
+        margin: 0 !important;
         max-width: 100% !important;
+        height: 100vh !important;
+    }
+    
+    /* Streamlitのデフォルト余白を完全に除去 */
+    div[data-testid="stVerticalBlock"] {
+        gap: 0 !important;
+        margin: 0 !important;
+        padding: 0 !important;
+    }
+    
+    .element-container {
+        margin: 0 !important;
+        padding: 0 !important;
+    }
+    
+    div[data-testid="column"] {
+        margin: 0 !important;
+        padding: 0 !important;
     }
     
     /* 地図を背景に固定 */
@@ -173,10 +217,11 @@ if not st.session_state.authenticated:
     # 地図を画面全体に表示（背景として）
     st_folium(background_map, width='100%', height=800, returned_objects=[], key="bg_map")
     
-    # 地図を背景に固定するJavaScript
+    # 地図を背景に固定するJavaScript（改良版）
     st.markdown("""
     <script>
-    setTimeout(function() {
+    function adjustMap() {
+        // 地図のiframeを取得
         const mapElements = document.querySelectorAll('iframe[title="streamlit_folium.st_folium"]');
         mapElements.forEach(function(element) {
             element.style.position = 'fixed';
@@ -186,8 +231,59 @@ if not st.session_state.authenticated:
             element.style.height = '100vh';
             element.style.zIndex = '-1';
             element.style.pointerEvents = 'none';
+            element.style.margin = '0';
+            element.style.padding = '0';
+            element.style.border = 'none';
         });
-    }, 500);
+        
+        // 地図のコンテナも調整
+        const mapContainers = document.querySelectorAll('div[data-testid="element-container"]');
+        mapContainers.forEach(function(container) {
+            if (container.querySelector('iframe[title="streamlit_folium.st_folium"]')) {
+                container.style.position = 'fixed';
+                container.style.top = '0';
+                container.style.left = '0';
+                container.style.width = '100vw';
+                container.style.height = '100vh';
+                container.style.zIndex = '-1';
+                container.style.margin = '0';
+                container.style.padding = '0';
+            }
+        });
+        
+        // Streamlitのルート要素も調整
+        const stApp = document.querySelector('.stApp');
+        if (stApp) {
+            stApp.style.margin = '0';
+            stApp.style.padding = '0';
+            stApp.style.height = '100vh';
+            stApp.style.overflow = 'hidden';
+        }
+        
+        // bodyとhtmlの調整
+        document.body.style.margin = '0';
+        document.body.style.padding = '0';
+        document.body.style.height = '100vh';
+        document.body.style.overflow = 'hidden';
+        document.documentElement.style.margin = '0';
+        document.documentElement.style.padding = '0';
+        document.documentElement.style.height = '100vh';
+        document.documentElement.style.overflow = 'hidden';
+    }
+    
+    // 初回実行
+    setTimeout(adjustMap, 100);
+    setTimeout(adjustMap, 500);
+    setTimeout(adjustMap, 1000);
+    
+    // レサイズ時にも実行
+    window.addEventListener('resize', adjustMap);
+    
+    // DOM変更監視（Streamlitの再描画対応）
+    const observer = new MutationObserver(function() {
+        setTimeout(adjustMap, 100);
+    });
+    observer.observe(document.body, { childList: true, subtree: true });
     </script>
     """, unsafe_allow_html=True)
     
