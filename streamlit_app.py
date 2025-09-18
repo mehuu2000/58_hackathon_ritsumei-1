@@ -48,6 +48,88 @@ st.markdown("""
         white-space: nowrap;
         box-sizing: border-box;
     }
+
+    /* Flexboxフォームスタイル */
+    .flex-form {
+        position: fixed;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        background: rgba(70, 70, 70, 0.85);
+        padding: 1.5rem;
+        border-radius: 0.6rem;
+        min-width: 24rem;
+        max-width: 90vw;
+        width: 28rem;
+        z-index: 1000;
+        box-sizing: border-box;
+        display: flex;
+        flex-direction: column;
+        gap: 1rem;
+    }
+
+    .flex-input-group {
+        display: flex;
+        flex-direction: column;
+        gap: 0.3rem;
+    }
+
+    .flex-label {
+        font-size: 0.8rem;
+        color: rgba(255, 255, 255, 0.9);
+        font-weight: 500;
+        margin-left: 0.2rem;
+    }
+
+    .flex-input {
+        flex: 1;
+        padding: 0.75rem;
+        border: none;
+        border-radius: 0.3rem;
+        font-size: 0.9rem;
+        background: rgba(240, 240, 240, 0.95);
+        box-sizing: border-box;
+        min-width: 0;
+    }
+
+    .flex-button {
+        flex: 1;
+        padding: 0.75rem;
+        border: none;
+        border-radius: 0.3rem;
+        background: #4CAF50;
+        color: white;
+        font-size: 1rem;
+        font-weight: bold;
+        cursor: pointer;
+        box-sizing: border-box;
+        transition: background-color 0.2s ease;
+        min-width: 0;
+    }
+
+    .flex-button:hover {
+        background: #45a049;
+    }
+
+    .flex-link-container {
+        text-align: left;
+        padding: 0.25rem 0;
+    }
+
+    .flex-link {
+        display: inline-block;
+        color: rgba(255, 255, 255, 0.9);
+        font-size: 0.75rem;
+        cursor: pointer;
+        padding: 0.2rem 0.4rem;
+        border-radius: 0.2rem;
+        transition: color 0.2s ease;
+        width: fit-content;
+    }
+
+    .flex-link:hover {
+        color: white;
+    }
 </style>
 """, unsafe_allow_html=True)
 
@@ -64,94 +146,8 @@ st_folium(background_map, width='100%', height=800, returned_objects=[], key="bg
 # アプリ名
 st.markdown('<div class="app-title">アプリ名</div>', unsafe_allow_html=True)
 
-# CSSでFlexboxスタイルを定義
-st.markdown('''
-<style>
-.flex-form {
-    position: fixed;
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%);
-    background: rgba(70, 70, 70, 0.85);
-    padding: 1.5rem;
-    border-radius: 0.6rem;
-    min-width: 24rem;
-    max-width: 90vw;
-    width: 28rem;
-    z-index: 1000;
-    box-sizing: border-box;
-    display: flex;
-    flex-direction: column;
-    gap: 1rem;
-}
-
-.flex-input-group {
-    display: flex;
-    flex-direction: column;
-    gap: 0.3rem;
-}
-
-.flex-label {
-    font-size: 0.8rem;
-    color: rgba(255, 255, 255, 0.9);
-    font-weight: 500;
-    margin-left: 0.2rem;
-}
-
-.flex-input {
-    flex: 1;
-    padding: 0.75rem;
-    border: none;
-    border-radius: 0.3rem;
-    font-size: 0.9rem;
-    background: rgba(240, 240, 240, 0.95);
-    box-sizing: border-box;
-    min-width: 0;
-}
-
-.flex-button {
-    flex: 1;
-    padding: 0.75rem;
-    border: none;
-    border-radius: 0.3rem;
-    background: #4CAF50;
-    color: white;
-    font-size: 1rem;
-    font-weight: bold;
-    cursor: pointer;
-    box-sizing: border-box;
-    transition: background-color 0.2s ease;
-    min-width: 0;
-}
-
-.flex-button:hover {
-    background: #45a049;
-}
-
-.flex-link-container {
-    text-align: left;
-    padding: 0.25rem 0;
-}
-
-.flex-link {
-    display: inline-block;
-    color: rgba(255, 255, 255, 0.9);
-    font-size: 0.75rem;
-    cursor: pointer;
-    padding: 0.2rem 0.4rem;
-    border-radius: 0.2rem;
-    transition: color 0.2s ease;
-    width: fit-content;
-}
-
-.flex-link:hover {
-    color: white;
-}
-</style>
-''', unsafe_allow_html=True)
-
-# 短いHTMLでフォームを作成
-st.markdown('''
+# HTMLフォーム（onclickを直接使用）
+form_html = """
 <div class="flex-form">
     <div class="flex-input-group">
         <label class="flex-label">メールアドレス（ログイン用ID）</label>
@@ -161,32 +157,35 @@ st.markdown('''
         <label class="flex-label">パスワード</label>
         <input type="password" id="password" class="flex-input">
     </div>
-    <button onclick="handleLogin()" class="flex-button">ログイン</button>
+    <button class="flex-button" onclick="
+        const email = document.getElementById('email').value;
+        const password = document.getElementById('password').value;
+        console.log('=== ログインボタンが押されました ===');
+        console.log('動作: ログイン試行');
+        console.log('メールアドレス:', email || '(入力なし)');
+        console.log('パスワード:', password ? '●'.repeat(password.length) + ' (' + password.length + '文字)' : '(入力なし)');
+        console.log('入力チェック:', email && password ? 'OK - 両方入力済み' : 'NG - 入力不足');
+        console.log('================================');
+        if (email && password) {
+            alert('ログイン機能は準備中です');
+        } else {
+            alert('メールアドレスとパスワードを入力してください');
+        }
+    ">ログイン</button>
     <div class="flex-link-container">
-        <span onclick="handleSignin()" class="flex-link">サインイン</span>
+        <span class="flex-link" onclick="
+            console.log('=== サインアップボタンが押されました ===');
+            console.log('動作: サインアップ画面への遷移');
+            console.log('現在の状態: サインアップ機能は準備中');
+            console.log('==================================');
+            alert('サインアップ機能は準備中です');
+        ">サインアップ</span>
     </div>
 </div>
-''', unsafe_allow_html=True)
+"""
 
-# JavaScript
-st.markdown('''
-<script>
-function handleLogin() {
-    const email = document.getElementById('email').value;
-    const password = document.getElementById('password').value;
-    
-    if (email && password) {
-        alert('ログイン機能は準備中です');
-    } else {
-        alert('メールアドレスとパスワードを入力してください');
-    }
-}
-
-function handleSignin() {
-    alert('サインイン機能は準備中です');
-}
-</script>
-''', unsafe_allow_html=True)
+# フォームを表示
+st.markdown(form_html, unsafe_allow_html=True)
 
 # 地図を背景に固定するJavaScript
 st.markdown("""
