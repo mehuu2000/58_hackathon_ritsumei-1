@@ -1,15 +1,60 @@
 'use client';
 
-import { MapContainer as LeafletMapContainer, TileLayer } from 'react-leaflet';
+import { MapContainer as LeafletMapContainer, TileLayer, useMapEvents, Marker } from 'react-leaflet';
 import { useEffect, useState } from 'react';
+import L from 'leaflet';
+import { renderToString } from 'react-dom/server';
+import { MapPin } from 'phosphor-react';
 
 interface MapContainerProps {
   interactive?: boolean;
+  clickedPoint?: { lat: number; lng: number } | null;
+  onMapClick?: (lat: number, lng: number) => void;
 }
 
 const TOKYO_POSITION: [number, number] = [35.6812, 139.7671]; // 東京駅
 
-export default function MapContainer({ interactive = true }: MapContainerProps) {
+// PhosphorアイコンでカスタムLeafletアイコンを作成
+const createCustomIcon = (lat: number, lng: number) => {
+  const iconHtml = renderToString(
+    <div style={{ position: 'relative', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+      <div style={{
+        background: 'white',
+        padding: '4px 8px',
+        borderRadius: '4px',
+        boxShadow: '0 2px 4px rgba(0,0,0,0.2)',
+        fontSize: '10px',
+        marginBottom: '4px',
+        whiteSpace: 'nowrap',
+        textAlign: 'center'
+      }}>
+        <div>緯度: {lat.toFixed(6)}</div>
+        <div>経度: {lng.toFixed(6)}</div>
+      </div>
+      <MapPin size={40} color="#ef4444" weight="fill" />
+    </div>
+  );
+
+  return L.divIcon({
+    className: 'custom-map-pin',
+    html: iconHtml,
+    iconSize: [130, 90],
+    iconAnchor: [65, 90],
+  });
+};
+
+// マップクリックイベントハンドラーコンポーネント
+function MapClickHandler({ onMapClick }: { onMapClick: (lat: number, lng: number) => void }) {
+  useMapEvents({
+    click(e) {
+      const { lat, lng } = e.latlng;
+      onMapClick(lat, lng);
+    },
+  });
+  return null;
+}
+
+export default function MapContainer({ interactive = true, clickedPoint, onMapClick }: MapContainerProps) {
   const [position, setPosition] = useState<[number, number]>(TOKYO_POSITION);
   const [isLoading, setIsLoading] = useState(true);
 
@@ -42,6 +87,14 @@ export default function MapContainer({ interactive = true }: MapContainerProps) 
     }
   }, [interactive]);
 
+  // 地図クリック時の処理
+  const handleMapClick = (lat: number, lng: number) => {
+    if (!interactive || !onMapClick) return; // インタラクティブでない場合は無視
+    
+    onMapClick(lat, lng);
+    console.log('地図がクリックされました:', lat, lng);
+  };
+
   if (isLoading) {
     return (
       <div style={{ height: '100%', width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#aaa' }}>
@@ -51,7 +104,7 @@ export default function MapContainer({ interactive = true }: MapContainerProps) 
   }
 
   return (
-    <div style={{ height: '100%', width: '100%' }}>
+    <div style={{ height: '100%', width: '100%', position: 'relative' }}>
       <LeafletMapContainer
         center={position}
         zoom={13}
@@ -70,6 +123,16 @@ export default function MapContainer({ interactive = true }: MapContainerProps) 
           attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
           url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
         />
+        {/* クリックイベントハンドラー */}
+        <MapClickHandler onMapClick={handleMapClick} />
+        
+        {/* クリックされた地点のマーカー表示 */}
+        {clickedPoint && (
+          <Marker
+            position={[clickedPoint.lat, clickedPoint.lng]}
+            icon={createCustomIcon(clickedPoint.lat, clickedPoint.lng)}
+          />
+        )}
       </LeafletMapContainer>
     </div>
   );

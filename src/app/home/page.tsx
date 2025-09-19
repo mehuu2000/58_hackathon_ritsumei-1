@@ -13,16 +13,40 @@ const MapContainer = dynamic(() => import('@/components/MapContainer'), {
 
 export default function HomePage() {
   const [isNewsExpanded, setIsNewsExpanded] = useState(false);
+  const [clickedPoint, setClickedPoint] = useState<{ lat: number; lng: number } | null>(null);
+  const [isPostMode, setIsPostMode] = useState(false);
+
+  const handleMapClick = (lat: number, lng: number) => {
+    // 投稿モードの時のみ地点を設定
+    if (isPostMode) {
+      setClickedPoint({ lat, lng });
+    }
+  };
+
+  const handlePostModeChange = (mode: boolean) => {
+    setIsPostMode(mode);
+    // 投稿モードがfalseになったら、ピン情報をクリア
+    if (!mode) {
+      setClickedPoint(null);
+    }
+  };
 
   return (
     <main className="relative h-screen w-screen overflow-hidden">
       {/* 地図を画面いっぱいに表示 */}
       <div className="absolute inset-0">
-        <MapContainer interactive={true} />
+        <MapContainer 
+          interactive={true} 
+          clickedPoint={clickedPoint}
+          onMapClick={handleMapClick}
+        />
       </div>
       
       {/* 木目調ナビゲーション */}
-      <WoodenNavigation />
+      <WoodenNavigation 
+        isPostMode={isPostMode}
+        setIsPostMode={handlePostModeChange}
+      />
       
       {/* ニュースコンポーネント */}
       <NewsComponent 

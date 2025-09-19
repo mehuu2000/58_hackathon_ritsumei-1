@@ -9,7 +9,12 @@ interface NavigationItem {
   action: () => void;
 }
 
-export default function WoodenNavigation() {
+interface WoodenNavigationProps {
+  isPostMode?: boolean;
+  setIsPostMode?: (mode: boolean) => void;
+}
+
+export default function WoodenNavigation({ isPostMode = false, setIsPostMode }: WoodenNavigationProps) {
   const { isNavigationExpanded, setIsNavigationExpanded } = useNavigation();
 
   const navigationItems: NavigationItem[] = [
@@ -26,7 +31,12 @@ export default function WoodenNavigation() {
     {
       icon: PencilSimple,
       label: '投稿',
-      action: () => console.log('投稿 clicked'),
+      action: () => {
+        if (setIsPostMode) {
+          setIsPostMode(!isPostMode);
+          console.log('投稿モード:', !isPostMode);
+        }
+      },
     },
     {
       icon: Trophy,
@@ -61,22 +71,31 @@ export default function WoodenNavigation() {
         ) : (
           // 展開している状態：アイコンとラベル
           <div className="flex items-center justify-between w-full h-full">
-            {navigationItems.map((item, index) => (
-              <button
-                key={index}
-                onClick={item.action}
-                className="flex flex-col items-center justify-center gap-0.5 hover:scale-110 transition-transform group flex-1 h-full"
-              >
-                <item.icon 
-                  size={20} 
-                  weight="regular" 
-                  color="#374151" 
-                />
-                <span className="text-[10px] font-medium text-gray-700 group-hover:text-gray-900">
-                  {item.label}
-                </span>
-              </button>
-            ))}
+            {navigationItems.map((item, index) => {
+              const isPostButton = item.label === '投稿';
+              const isActive = isPostButton && isPostMode;
+              
+              return (
+                <button
+                  key={index}
+                  onClick={item.action}
+                  className={`flex flex-col items-center justify-center gap-0.5 hover:scale-110 transition-transform group flex-1 h-full ${
+                    isActive ? 'bg-blue-100 rounded-lg' : ''
+                  }`}
+                >
+                  <item.icon 
+                    size={20} 
+                    weight="regular" 
+                    color={isActive ? "#2563eb" : "#374151"} 
+                  />
+                  <span className={`text-[10px] font-medium group-hover:text-gray-900 ${
+                    isActive ? 'text-blue-600' : 'text-gray-700'
+                  }`}>
+                    {item.label}
+                  </span>
+                </button>
+              );
+            })}
             
             {/* 閉じるボタン */}
             <div className="ml-2 h-full flex items-center">
