@@ -13,11 +13,29 @@ const MapContainer = dynamic(() => import('@/components/MapContainer'), {
   loading: () => <div className="flex items-center justify-center h-screen bg-gray-200">Loading map...</div>
 });
 
+// ユーザーの型定義
+interface User {
+  uid: string;
+  display_name: string;
+  token: number;
+  email: string;
+  created_at: string;
+}
+
 export default function HomePage() {
   const [isNewsExpanded, setIsNewsExpanded] = useState(false);
   const [clickedPoint, setClickedPoint] = useState<{ lat: number; lng: number } | null>(null);
   const [isPostMode, setIsPostMode] = useState(false);
   const [isPostModalVisible, setIsPostModalVisible] = useState(false);
+  
+  // ユーザーのモックデータ
+  const [user] = useState<User>({
+    uid: '12345678-1234-1234-1234-123456789abc',
+    display_name: '山田太郎',
+    token: 1250,
+    email: 'yamada@example.com',
+    created_at: '2025-01-15T10:30:00Z'
+  });
 
   const handleMapClick = (lat: number, lng: number) => {
     // 投稿モードの時のみ地点を設定
@@ -68,6 +86,7 @@ export default function HomePage() {
         isVisible={isPostModalVisible}
         onClose={() => setIsPostModalVisible(false)}
         selectedLocation={clickedPoint}
+        user={user}
       />
     </main>
   );
