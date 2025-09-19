@@ -115,10 +115,10 @@ export default function NewsComponent({ isExpanded, setIsExpanded }: NewsCompone
   );
 
   return (
-    <div className="fixed top-0 right-16 z-40 h-screen">
+    <div className="fixed top-0 right-16 z-40 h-screen pointer-events-none">
       <div className="flex flex-col h-full">
         {/* ニュースパネル（常に存在、閉じている時は高さ0） */}
-        <div className={`w-80 self-center ${
+        <div className={`w-80 self-center pointer-events-auto ${
           isExpanded 
             ? 'h-[70%] bg-white rounded-b-2xl shadow-xl border-l-2 border-r-2 border-b-2 border-gray-300 overflow-hidden' 
             : 'h-0 overflow-hidden'
@@ -207,7 +207,7 @@ export default function NewsComponent({ isExpanded, setIsExpanded }: NewsCompone
         </div>
         
         {/* 吊り紐と持ち手のコンテナ */}
-        <div className="flex flex-col items-center">
+        <div className="flex flex-col items-center pointer-events-auto">
           {/* 下向きの紐（常に表示） */}
           <div className="w-0.5 h-12 bg-gray-600"></div>
           
