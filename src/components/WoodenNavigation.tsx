@@ -1,7 +1,7 @@
 'use client';
 
-import { useState } from 'react';
 import { House, MagnifyingGlass, PencilSimple, Trophy, User, CaretRight, IconProps } from 'phosphor-react';
+import { useNavigation } from '@/contexts/NavigationContext';
 
 interface NavigationItem {
   icon: React.ComponentType<IconProps>;
@@ -10,7 +10,7 @@ interface NavigationItem {
 }
 
 export default function WoodenNavigation() {
-  const [isExpanded, setIsExpanded] = useState(false);
+  const { isNavigationExpanded, setIsNavigationExpanded } = useNavigation();
 
   const navigationItems: NavigationItem[] = [
     {
@@ -47,13 +47,13 @@ export default function WoodenNavigation() {
           relative bg-white
           rounded-full shadow-lg border-2 border-gray-300
           transition-all duration-300 ease-in-out
-          ${isExpanded ? 'px-4 py-1 min-w-[400px] h-14' : 'w-14 h-14'}
+          ${isNavigationExpanded ? 'px-4 py-1 min-w-[400px] h-14' : 'w-14 h-14'}
         `}
       >
-        {!isExpanded ? (
+        {!isNavigationExpanded ? (
           // 閉じている状態：矢印のみ
           <button
-            onClick={() => setIsExpanded(true)}
+            onClick={() => setIsNavigationExpanded(true)}
             className="w-full h-full flex items-center justify-center hover:scale-110 transition-transform"
           >
             <CaretRight size={20} weight="bold" color="#374151" />
@@ -81,7 +81,7 @@ export default function WoodenNavigation() {
             {/* 閉じるボタン */}
             <div className="ml-2 h-full flex items-center">
               <button
-                onClick={() => setIsExpanded(false)}
+                onClick={() => setIsNavigationExpanded(false)}
                 className="flex items-center justify-center w-8 h-8 hover:scale-110 transition-transform"
               >
                 <CaretRight 
