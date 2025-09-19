@@ -21,13 +21,14 @@ FREEPIK_API_KEY=あなたのAPIキー
 # FREEPIK_AUTH_TYPE=x-api-key   # または bearer
 # FREEPIK_OUTPUT_DIR=backend/generate_image/outputs
 
-# Cloudflare R2
-R2_ACCESS_KEY_ID=xxxxx
-R2_SECRET_ACCESS_KEY=xxxxx
-R2_ACCOUNT_ID=xxxxxxxxxxxxxxxxxxxxx
-R2_BUCKET=your-bucket-name
-# 公開用ベースURL（例: https://cdn.example.com または https://<bucket>.r2.dev 等）
-R2_PUBLIC_BASE_URL=https://your-public-domain-or-r2.dev
+# Google Drive
+# いずれかを設定（ファイルパス or JSON文字列）
+GOOGLE_SERVICE_ACCOUNT_FILE=/absolute/path/to/service_account.json
+# または
+GOOGLE_SERVICE_ACCOUNT_JSON={"type": "service_account", ...}
+
+# 任意: 保存先フォルダ（共有ドライブ/マイドライブ）
+GOOGLE_DRIVE_FOLDER_ID=xxxxxxxxxxxxxxxxxxxxxxx
 ```
 
 `.env`を使わない場合は、シェルの環境変数で同名を設定してください。
@@ -48,7 +49,7 @@ python -m backend.generate_image.cli "富士山の上に浮かぶ熱気球、シ
 
 出力はデフォルトで `backend/generate_image/outputs` にPNGとして保存されます。
 
-### 関数としての利用
+### 関数としての利用（Google Driveに保存し、誰でも見れるURLを返す）
 
 ```python
 from backend.generate_image import generate_and_upload_images, generate_and_upload_image

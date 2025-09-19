@@ -3,7 +3,7 @@ from __future__ import annotations
 from typing import List, Optional
 
 from .client import FreepikImageClient
-from .r2_storage import R2Storage
+from .drive_storage import DriveStorage
 
 
 def generate_and_upload_images(
@@ -15,19 +15,20 @@ def generate_and_upload_images(
     prefix: str = "freepik",
     content_type: str = "image/png",
 ) -> List[str]:
-    """Freepikで画像を生成し、Cloudflare R2に保存して公開URL群を返す。
+    """Freepikで画像を生成し、Google Driveに保存して公開URL群を返す。
 
     環境変数:
       - FREEPIK_API_KEY / FREEPIK_TOKEN
       - FREEPIK_GENERATE_URL（任意）
       - FREEPIK_AUTH_TYPE（任意）
-      - R2_ACCESS_KEY_ID / R2_SECRET_ACCESS_KEY / R2_ACCOUNT_ID / R2_BUCKET / R2_PUBLIC_BASE_URL
+      - GOOGLE_SERVICE_ACCOUNT_FILE または GOOGLE_SERVICE_ACCOUNT_JSON
+      - GOOGLE_DRIVE_FOLDER_ID（任意、保存先フォルダID）
     """
     if not prompt or not prompt.strip():
         raise ValueError("prompt は必須です。")
 
     client = FreepikImageClient.from_env()
-    r2 = R2Storage.from_env()
+    drive = DriveStorage.from_env()
 
     images = client.generate_image_bytes(
         prompt=prompt,
@@ -37,10 +38,14 @@ def generate_and_upload_images(
     )
 
     urls: List[str] = []
-    ext = _ext_for_content_type(content_type)
     for data in images:
-        key = r2.generate_key(prefix=f"images/{prefix}", ext=ext)
-        _, url = r2.upload_bytes(data, key=key, content_type=content_type)
+        filename = f"{prefix}-{_safe_ts_suffix()}{_ext_for_content_type(content_type)}"
+        _, url = drive.upload_bytes(
+            data,
+            filename=filename,
+            mimetype=content_type,
+            make_public=True,
+        )
         urls.append(url)
     return urls
 
@@ -72,6 +77,11 @@ def _ext_for_content_type(content_type: str) -> str:
     if c == "image/webp":
         return ".webp"
     return ".png"
+
+
+def _safe_ts_suffix() -> str:
+    import time, uuid
+    return f"-{time.strftime('%Y%m%d-%H%M%S')}-{uuid.uuid4().hex}"
 
 
 __all__ = [

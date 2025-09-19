@@ -1,10 +1,10 @@
 from .client import FreepikImageClient
-from .r2_storage import R2Storage
+from .drive_storage import DriveStorage
 from .service import generate_and_upload_images, generate_and_upload_image
 
 __all__ = [
     "FreepikImageClient",
-    "R2Storage",
+    "DriveStorage",
     "generate_and_upload_images",
     "generate_and_upload_image",
 ]
