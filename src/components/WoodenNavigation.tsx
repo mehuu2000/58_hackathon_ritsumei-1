@@ -1,5 +1,6 @@
 'use client';
 
+import { useState, useEffect } from 'react';
 import { House, MagnifyingGlass, PencilSimple, Trophy, User, CaretRight, IconProps } from 'phosphor-react';
 import { useNavigation } from '@/contexts/NavigationContext';
 
@@ -16,6 +17,24 @@ interface WoodenNavigationProps {
 
 export default function WoodenNavigation({ isPostMode = false, setIsPostMode }: WoodenNavigationProps) {
   const { isNavigationExpanded, setIsNavigationExpanded } = useNavigation();
+  const [showContent, setShowContent] = useState(false);
+  const [showFrame, setShowFrame] = useState(false);
+
+  // アニメーション制御
+  useEffect(() => {
+    if (isNavigationExpanded) {
+      // 開く時：即座に内容と枠を表示
+      setShowContent(true);
+      setShowFrame(true);
+    } else {
+      // 閉じる時：300ms後（アニメーション終了後）に内容を非表示
+      const timer = setTimeout(() => {
+        setShowContent(false);
+        setShowFrame(false);
+      }, 300);
+      return () => clearTimeout(timer);
+    }
+  }, [isNavigationExpanded]);
 
   const navigationItems: NavigationItem[] = [
     {
@@ -54,10 +73,11 @@ export default function WoodenNavigation({ isPostMode = false, setIsPostMode }: 
     <div className="fixed bottom-4 left-4 z-50">
       <div
         className={`
-          relative bg-white
+          relative overflow-hidden
           rounded-full shadow-lg border-2 border-gray-300
-          transition-all duration-300 ease-in-out
-          ${isNavigationExpanded ? 'px-4 py-1 min-w-[400px] h-14' : 'w-14 h-14'}
+          transition-[width] duration-300 ease-out h-14
+          ${isNavigationExpanded ? 'w-[400px]' : 'w-14'}
+          ${showFrame ? 'bg-white px-4 py-1' : 'bg-white'}
         `}
       >
         {!isNavigationExpanded ? (
@@ -68,7 +88,7 @@ export default function WoodenNavigation({ isPostMode = false, setIsPostMode }: 
           >
             <CaretRight size={20} weight="bold" color="#374151" />
           </button>
-        ) : (
+        ) : showContent ? (
           // 展開している状態：アイコンとラベル
           <div className="flex items-center justify-between w-full h-full">
             {navigationItems.map((item, index) => {
@@ -112,7 +132,7 @@ export default function WoodenNavigation({ isPostMode = false, setIsPostMode }: 
               </button>
             </div>
           </div>
-        )}
+        ) : null}
       </div>
     </div>
   );
