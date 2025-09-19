@@ -1,0 +1,159 @@
+'use client';
+
+import { useState } from 'react';
+import { MagnifyingGlass } from 'phosphor-react';
+
+interface NewsItem {
+  id: string;
+  title: string;
+  content: string;
+  timestamp: string;
+  url: string;
+  category: string;
+}
+
+export default function NewsComponent() {
+  const [isExpanded, setIsExpanded] = useState(false);
+  const [searchQuery, setSearchQuery] = useState('');
+
+  // モックデータ
+  const [newsItems] = useState<NewsItem[]>([
+    {
+      id: '1',
+      title: '今台気いい！米同氏テロから24年',
+      content: '米同時多発テロから24年が経過し、追悼式典が行われました。詳細な内容についてはこちらをご確認ください。',
+      timestamp: '2025-09-19 10:30',
+      url: 'https://example.com/news1',
+      category: 'ニュース'
+    },
+    {
+      id: '2',
+      title: '中国空母「福建」海自が初確認',
+      content: '中国の空母「福建」について海上自衛隊が初めて確認したと発表されました。',
+      timestamp: '2025-09-19 09:15',
+      url: 'https://example.com/news2',
+      category: 'ニュース'
+    },
+    {
+      id: '3',
+      title: '金正恩氏の娘 後継者と認定か',
+      content: '北朝鮮の金正恩氏の娘について、後継者として認定される可能性が報じられています。',
+      timestamp: '2025-09-19 08:45',
+      url: 'https://example.com/news3',
+      category: 'ニュース'
+    },
+    {
+      id: '4',
+      title: 'コンテナ貨物税し死亡 大府容疑か',
+      content: 'コンテナ貨物に関する事件で死亡事故が発生し、大府容疑者が関与している可能性が浮上しています。',
+      timestamp: '2025-09-19 07:20',
+      url: 'https://example.com/news4',
+      category: 'ニュース'
+    }
+  ]);
+
+  const truncateText = (text: string, maxLength: number) => {
+    return text.length > maxLength ? text.substring(0, maxLength) + '...' : text;
+  };
+
+  const filteredNews = newsItems.filter(item =>
+    item.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    item.content.toLowerCase().includes(searchQuery.toLowerCase())
+  );
+
+  return (
+    <div className="fixed top-0 right-40 z-40">
+      <div className="flex flex-col">
+        {/* ニュースパネル（展開時のみ表示） */}
+        {isExpanded && (
+          <div className="bg-white rounded-b-lg shadow-xl border-l-2 border-r-2 border-b-2 border-gray-300 w-80 max-h-96 overflow-hidden self-center">
+            {/* ヘッダー */}
+            <div className="p-4 border-b border-gray-200">
+              <div className="flex justify-between items-center mb-3">
+                <h3 className="text-lg font-bold text-gray-800">ニュース</h3>
+                <button
+                  onClick={() => setIsExpanded(false)}
+                  className="text-gray-500 hover:text-gray-700 text-xl"
+                >
+                  ×
+                </button>
+              </div>
+              
+              {/* 検索バー */}
+              <div className="relative">
+                <MagnifyingGlass 
+                  size={16} 
+                  className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400"
+                />
+                <input
+                  type="text"
+                  placeholder="検索"
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-full text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                />
+              </div>
+            </div>
+            
+            {/* ニュースリスト */}
+            <div className="max-h-64 overflow-y-auto">
+              {filteredNews.map((news) => (
+                <div key={news.id} className="p-3 border-b border-gray-100 last:border-b-0 hover:bg-gray-50">
+                  <div className="flex items-start gap-3">
+                    {/* サムネイル（画像がない場合の代替） */}
+                    <div className="w-12 h-12 bg-gray-200 rounded flex-shrink-0 flex items-center justify-center">
+                      <span className="text-xs text-gray-500">IMG</span>
+                    </div>
+                    
+                    <div className="flex-1 min-w-0">
+                      {/* タイトル */}
+                      <h4 className="text-sm font-medium text-gray-800 mb-1">
+                        {truncateText(news.title, 25)}
+                      </h4>
+                      
+                      {/* 時間とカテゴリ */}
+                      <div className="flex items-center gap-2 mb-1">
+                        <span className="text-xs text-gray-500">{news.timestamp}</span>
+                        <span className="bg-orange-100 text-orange-600 text-xs px-2 py-0.5 rounded">
+                          {news.category}
+                        </span>
+                      </div>
+                      
+                      {/* 内容（省略表示） */}
+                      <p className="text-xs text-gray-600">
+                        {truncateText(news.content, 40)}
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              ))}
+              
+              {filteredNews.length === 0 && (
+                <div className="p-4 text-center text-gray-500 text-sm">
+                  検索結果が見つかりません
+                </div>
+              )}
+            </div>
+          </div>
+        )}
+        
+        {/* 吊り紐と持ち手のコンテナ */}
+        <div className="flex flex-col items-center">
+          {/* 下向きの紐（常に表示） */}
+          <div className="w-0.5 h-8 bg-gray-600"></div>
+          
+          {/* 三角形の持ち手（常に表示） */}
+          <button
+            onClick={() => setIsExpanded(!isExpanded)}
+            className="relative hover:scale-110 transition-transform"
+          >
+            {/* 三角形 */}
+            <div className="w-0 h-0 border-l-[15px] border-r-[15px] border-b-[20px] border-l-transparent border-r-transparent border-b-gray-700"></div>
+            {/* 三角形内の黒い点 */}
+            <div className="absolute top-3 left-1/2 transform -translate-x-1/2 w-2 h-2 bg-black rounded-full"></div>
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}

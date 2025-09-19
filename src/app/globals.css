@@ -37,7 +37,8 @@ html, body {
   background: #aaa !important;
 }
 
-.leaflet-control-container {
+/* ズームコントロールのみ非表示、attributionは表示 */
+.leaflet-control-zoom {
   display: none;
 }
 
