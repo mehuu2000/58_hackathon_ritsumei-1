@@ -1,6 +1,10 @@
 import httpx
 from fastapi import FastAPI, HTTPException
 from pydantic import BaseModel, Field
+from dotenv import load_dotenv
+import os
+
+load_dotenv()
 
 # --- 設定 ---
 app = FastAPI(
@@ -8,12 +12,10 @@ app = FastAPI(
     description="緯度経度からその場所の都道府県ニュースをGNews APIを使って取得します。"
 )
 
-# ▼▼▼ ここにあなたのGNews APIキー（トークン）を貼り付けてください ▼▼▼
-GNEWS_API_KEY = "YOUR_GNEWS_API_KEY_HERE"
-# ▲▲▲ ここにあなたのGNews APIキー（トークン）を貼り付けてください ▲▲▲
+GNEWS_API_KEY = os.getenv("GNEWS_API_KEY")
 
-
-# --- データ構造の定義 (Pydanticモデル) ---
+if not GNEWS_API_KEY:
+    raise ValueError("環境変数 'GNEWS_API_KEY' が設定されていません。")
 
 class LocationRequest(BaseModel):
     latitude: float = Field(..., example=35.6895, description="緯度")
@@ -26,8 +28,6 @@ class NewsArticle(BaseModel):
 
 
 # --- 外部APIと通信する関数 ---
-
-# 緯度経度から都道府県名を取得する（この関数は変更なし）
 async def get_prefecture_from_coords(lat: float, lon: float) -> str | None:
     """国土地理院APIを使い、緯度経度から都道府県名を取得する"""
     gsi_api_url = f"https://mreversegeocoding.gsi.go.jp/reverse-geocoding/ds/revgeoinfo?lat={lat}&lon={lon}&outtype=json"
@@ -44,7 +44,7 @@ async def get_prefecture_from_coords(lat: float, lon: float) -> str | None:
         except httpx.RequestError:
             return None
 
-# 【変更点】都道府県名からニュースを取得する (GNews API版)
+# 都道府県名からニュースを取得する (GNews API版)
 async def get_news_for_prefecture(prefecture: str) -> list[NewsArticle]:
     """GNews APIを使い、指定された都道府県のニュースを取得する"""
     gnews_api_url = "https://gnews.io/api/v4/search"
@@ -75,8 +75,6 @@ async def get_news_for_prefecture(prefecture: str) -> list[NewsArticle]:
         except httpx.RequestError:
             return []
 
-
-# --- APIの窓口（エンドポイント、変更なし） ---
 
 @app.post("/api/get-news-by-location", response_model=list[NewsArticle])
 async def get_news_by_location(location: LocationRequest):
