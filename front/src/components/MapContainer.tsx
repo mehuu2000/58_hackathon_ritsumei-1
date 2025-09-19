@@ -1,6 +1,6 @@
 'use client';
 
-import { MapContainer as LeafletMapContainer, TileLayer, useMapEvents, Marker } from 'react-leaflet';
+import { MapContainer as LeafletMapContainer, TileLayer, useMapEvents, Marker, useMap } from 'react-leaflet';
 import { useEffect, useState } from 'react';
 import L from 'leaflet';
 import { renderToString } from 'react-dom/server';
@@ -51,6 +51,45 @@ function MapClickHandler({ onMapClick }: { onMapClick: (lat: number, lng: number
       onMapClick(lat, lng);
     },
   });
+  return null;
+}
+
+// 地図の中心移動を制御するコンポーネント
+function MapViewController({ clickedPoint }: { clickedPoint: { lat: number; lng: number } | null }) {
+  const map = useMap();
+
+  useEffect(() => {
+    if (!clickedPoint || !map) return;
+
+    // 画面サイズを取得
+    const container = map.getContainer();
+    const containerWidth = container.offsetWidth;
+    
+    // 画面幅の1/4の位置に選択地点を表示するため、
+    // 実際の地図中心は右にずらす必要がある
+    const targetScreenX = containerWidth / 4;
+    const centerScreenX = containerWidth / 2;
+    const offsetPixels = centerScreenX - targetScreenX;
+    
+    // ピクセルオフセットを緯度経度オフセットに変換
+    const currentCenter = map.getCenter();
+    const currentZoom = map.getZoom();
+    
+    // 東西方向（経度）のオフセットを計算
+    const metersPerPixel = 40075016.686 * Math.cos(currentCenter.lat * Math.PI / 180) / Math.pow(2, currentZoom + 8);
+    const offsetMeters = offsetPixels * metersPerPixel;
+    const offsetLng = offsetMeters / (111320 * Math.cos(currentCenter.lat * Math.PI / 180));
+    
+    // 新しい中心位置を計算（選択地点から経度オフセット分右にずらす）
+    const newCenter: [number, number] = [clickedPoint.lat, clickedPoint.lng + offsetLng];
+    
+    // スムーズに移動
+    map.flyTo(newCenter, currentZoom, {
+      duration: 1.0, // 1秒でアニメーション
+    });
+
+  }, [clickedPoint, map]);
+
   return null;
 }
 
@@ -125,6 +164,9 @@ export default function MapContainer({ interactive = true, clickedPoint, onMapCl
         />
         {/* クリックイベントハンドラー */}
         <MapClickHandler onMapClick={handleMapClick} />
+        
+        {/* 地図の中心移動制御 */}
+        <MapViewController clickedPoint={clickedPoint || null} />
         
         {/* クリックされた地点のマーカー表示 */}
         {clickedPoint && (

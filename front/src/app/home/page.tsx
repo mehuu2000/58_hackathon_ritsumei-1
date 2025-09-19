@@ -55,8 +55,8 @@ export default function HomePage() {
         setIsExpanded={setIsNewsExpanded}
       />
       
-      {/* 投稿モード時の案内メッセージ */}
-      <PostModeMessage isVisible={isPostMode} />
+      {/* 投稿モード時の案内メッセージ（場所未選択時のみ） */}
+      <PostModeMessage isVisible={isPostMode && !clickedPoint} />
     </main>
   );
 }
