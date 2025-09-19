@@ -13,13 +13,12 @@ RUN apt-get update \
  && rm -rf /var/lib/apt/lists/*
 
 # Install Python deps first (better layer caching)
-COPY backend/requirements.txt ./backend/requirements.txt
-RUN pip install --no-cache-dir -r backend/requirements.txt
+COPY requirements.txt ./requirements.txt
+RUN pip install --no-cache-dir -r requirements.txt
 
-# Copy application code
-COPY . .
+# Copy application code (keep backend as a top-level package)
+COPY . ./backend
 
 EXPOSE 8000
 
-# Default command (can be overridden by docker-compose)
 CMD ["uvicorn", "backend.app:app", "--host", "0.0.0.0", "--port", "8000"]
