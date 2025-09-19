@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { MagnifyingGlass } from 'phosphor-react';
+import { MagnifyingGlass, Triangle } from 'phosphor-react';
 
 interface NewsItem {
   id: string;
@@ -209,17 +209,17 @@ export default function NewsComponent({ isExpanded, setIsExpanded }: NewsCompone
         {/* 吊り紐と持ち手のコンテナ */}
         <div className="flex flex-col items-center pointer-events-auto">
           {/* 下向きの紐（常に表示） */}
-          <div className="w-0.5 h-12 bg-gray-600"></div>
+          <div className="w-[3px] h-12 bg-gray-600"></div>
           
           {/* 三角形の持ち手（常に表示） */}
           <button
             onClick={() => setIsExpanded(!isExpanded)}
-            className="relative hover:scale-110 transition-transform"
+            className="relative hover:scale-110 transition-transform -mt-1"
           >
-            {/* 三角形 */}
-            <div className="w-0 h-0 border-l-[15px] border-r-[15px] border-b-[20px] border-l-transparent border-r-transparent border-b-gray-700"></div>
+            {/* Triangleアイコン */}
+            <Triangle size={32} color="black" weight="bold" />
             {/* 三角形内の黒い点 */}
-            <div className="absolute top-3 left-1/2 transform -translate-x-1/2 w-2 h-2 bg-black rounded-full"></div>
+            <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-[1px] w-2 h-2 bg-black rounded-full"></div>
           </button>
         </div>
       </div>
