@@ -1,5 +1,6 @@
 'use client';
 
+import { useState } from 'react';
 import dynamic from 'next/dynamic';
 import WoodenNavigation from '@/components/WoodenNavigation';
 import NewsComponent from '@/components/NewsComponent';
@@ -11,6 +12,8 @@ const MapContainer = dynamic(() => import('@/components/MapContainer'), {
 });
 
 export default function HomePage() {
+  const [isNewsExpanded, setIsNewsExpanded] = useState(false);
+
   return (
     <main className="relative h-screen w-screen overflow-hidden">
       {/* 地図を画面いっぱいに表示 */}
@@ -22,7 +25,10 @@ export default function HomePage() {
       <WoodenNavigation />
       
       {/* ニュースコンポーネント */}
-      <NewsComponent />
+      <NewsComponent 
+        isExpanded={isNewsExpanded}
+        setIsExpanded={setIsNewsExpanded}
+      />
     </main>
   );
 }
