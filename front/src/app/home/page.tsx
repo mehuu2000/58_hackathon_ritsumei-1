@@ -5,6 +5,7 @@ import dynamic from 'next/dynamic';
 import WoodenNavigation from '@/components/WoodenNavigation';
 import NewsComponent from '@/components/NewsComponent';
 import PostModeMessage from '@/components/PostModeMessage';
+import PostModal from '@/components/PostModal';
 
 // Leafletはクライアントサイドでのみ動作するため、dynamic importを使用
 const MapContainer = dynamic(() => import('@/components/MapContainer'), {
@@ -16,19 +17,23 @@ export default function HomePage() {
   const [isNewsExpanded, setIsNewsExpanded] = useState(false);
   const [clickedPoint, setClickedPoint] = useState<{ lat: number; lng: number } | null>(null);
   const [isPostMode, setIsPostMode] = useState(false);
+  const [isPostModalVisible, setIsPostModalVisible] = useState(false);
 
   const handleMapClick = (lat: number, lng: number) => {
     // 投稿モードの時のみ地点を設定
     if (isPostMode) {
       setClickedPoint({ lat, lng });
+      // 場所を選択したら投稿モーダルを表示
+      setIsPostModalVisible(true);
     }
   };
 
   const handlePostModeChange = (mode: boolean) => {
     setIsPostMode(mode);
-    // 投稿モードがfalseになったら、ピン情報をクリア
+    // 投稿モードがfalseになったら、ピン情報をクリアし投稿モーダルを閉じる
     if (!mode) {
       setClickedPoint(null);
+      setIsPostModalVisible(false);
     }
   };
 
@@ -57,6 +62,13 @@ export default function HomePage() {
       
       {/* 投稿モード時の案内メッセージ（場所未選択時のみ） */}
       <PostModeMessage isVisible={isPostMode && !clickedPoint} />
+      
+      {/* 投稿モーダル */}
+      <PostModal 
+        isVisible={isPostModalVisible}
+        onClose={() => setIsPostModalVisible(false)}
+        selectedLocation={clickedPoint}
+      />
     </main>
   );
 }
