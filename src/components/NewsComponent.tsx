@@ -229,7 +229,7 @@ export default function NewsComponent({ isExpanded, setIsExpanded }: NewsCompone
         </div>
         
         {/* 吊り紐と持ち手のコンテナ */}
-        <div className="flex flex-col items-center pointer-events-auto">
+        <div className="flex flex-col items-center pointer-events-auto transition-all duration-500 ease-out">
           {/* 下向きの紐（常に表示） */}
           <div className="w-[3px] h-12 bg-gray-600"></div>
           
