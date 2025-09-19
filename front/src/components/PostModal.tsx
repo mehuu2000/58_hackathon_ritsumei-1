@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { X } from 'phosphor-react';
+import { X, User } from 'phosphor-react';
 
 interface User {
   uid: string;
@@ -65,22 +65,59 @@ export default function PostModal({ isVisible, onClose, selectedLocation, user }
           style={{ height: '80vh' }}
         >
           {showContent && (
-            <div className="h-full flex flex-col p-4">
-              {/* 左上に所持トークン表示、右上にバツボタン */}
-              <div className="flex justify-between items-start mb-6">
-                <div className="flex flex-col">
-                  <span className="text-sm text-gray-600 mb-1">所持トークン</span>
-                  <span className="text-2xl font-bold text-blue-600">{user.token.toLocaleString()}t</span>
+            <div className="h-full flex p-4">
+              {/* 左側のdiv (4の比率) */}
+              <div className="w-2/5 pr-4">
+                <div className="flex gap-6 mb-4">
+                  {/* 所持トークン表示 */}
+                  <div>
+                    <span className="text-sm text-gray-600 mb-1 block">所持トークン</span>
+                    <span className="text-2xl font-bold text-black">{user.token.toLocaleString()}t</span>
+                  </div>
+                  
+                  {/* 緯度経度表示 */}
+                  {selectedLocation && (
+                    <div className="text-base text-gray-800">
+                      <div>緯度: {selectedLocation.lat.toFixed(6)}</div>
+                      <div>経度: {selectedLocation.lng.toFixed(6)}</div>
+                    </div>
+                  )}
                 </div>
+                
+                {/* アイコンとボタン */}
+                <div className="flex gap-6 items-start">
+                  {/* アイコン表示 */}
+                  <div className="w-28 h-28 bg-gray-200 rounded-full flex items-center justify-center">
+                    <User size={48} className="text-gray-500" />
+                  </div>
+                  
+                  {/* ボタン群 */}
+                  <div className="flex flex-col justify-between h-28">
+                    <div className="flex flex-col items-end">
+                      <button className="px-9 py-2 text-white text-base font-semibold rounded transition-colors hover:opacity-80" style={{ backgroundColor: '#7BB8FF' }}>
+                        AIで生成
+                      </button>
+                      <div className="text-sm text-red-400 text-center">100t消費</div>
+                    </div>
+                    <button className="px-9 py-2 text-white text-base font-semibold rounded transition-colors hover:opacity-80" style={{ backgroundColor: '#7BB8FF' }}>
+                      既存選択
+                    </button>
+                  </div>
+                </div>
+              </div>
+              
+              {/* 右側のdiv (6の比率) */}
+              <div className="w-3/5 pl-4 relative">
+                {/* 右上にバツボタン */}
                 <button
                   onClick={onClose}
-                  className="text-gray-500 hover:text-gray-700 p-1"
+                  className="absolute top-0 right-0 text-gray-500 hover:text-gray-700 p-1"
                 >
                   <X size={20} />
                 </button>
+                
+                {/* 投稿フォームの内容をここに追加 */}
               </div>
-              
-              {/* 投稿フォームの内容をここに追加 */}
             </div>
           )}
         </div>
