@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect, useRef } from 'react';
-import { X, User, Plus, Image, Upload } from 'phosphor-react';
+import { X, User, Plus, Image, Upload, ArrowRight } from 'phosphor-react';
 
 interface User {
   uid: string;
@@ -25,6 +25,8 @@ export default function PostModal({ isVisible, onClose, selectedLocation, user }
   const [subTags, setSubTags] = useState<string[]>([]);
   const [subTagInput, setSubTagInput] = useState('');
   const [selectedImage, setSelectedImage] = useState<string | null>(null);
+  const [rewardAmount, setRewardAmount] = useState('');
+  const [distributionRatio, setDistributionRatio] = useState(0.5); // 0=解決者100%, 1=貢献者100%
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   // アニメーション制御
@@ -60,6 +62,14 @@ export default function PostModal({ isVisible, onClose, selectedLocation, user }
 
   const handleImageUpload = () => {
     fileInputRef.current?.click();
+  };
+
+  // 報酬配布計算
+  const calculateDistribution = () => {
+    const total = parseInt(rewardAmount) || 0;
+    const contributorAmount = Math.round(total * distributionRatio);
+    const solverAmount = total - contributorAmount;
+    return { solverAmount, contributorAmount };
   };
 
   if (!showFrame) return null;
@@ -285,6 +295,90 @@ export default function PostModal({ isVisible, onClose, selectedLocation, user }
                     onChange={handleFileSelect}
                     className="hidden"
                   />
+                </div>
+                
+                {/* 報酬設定 */}
+                <div className="mt-4 flex justify-center">
+                  <div className="flex items-center gap-4">
+                    {/* 報酬入力 */}
+                    <div className="flex-shrink-0">
+                      <label className="block text-sm font-medium text-gray-700 mb-2">
+                        報酬
+                      </label>
+                      <div className="w-32 bg-gray-100 px-4 py-3 rounded-lg flex items-center justify-center">
+                        <input
+                          type="number"
+                          value={rewardAmount}
+                          onChange={(e) => setRewardAmount(e.target.value)}
+                          placeholder="400"
+                          className="w-full bg-transparent text-2xl font-bold text-center outline-none"
+                        />
+                        <span className="text-lg font-medium ml-1">t</span>
+                      </div>
+                    </div>
+                    
+                    {/* 矢印 */}
+                    <div className="flex-shrink-0 mt-8">
+                      <ArrowRight size={24} className="text-gray-600" />
+                    </div>
+                    
+                    {/* 達成報酬表示 */}
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">
+                        達成報酬
+                      </label>
+                      <div className="space-y-2">
+                        <div>
+                          <span className="border-b border-gray-300 pb-1 inline-block">
+                            <span className="text-sm text-gray-700">解決者：</span>
+                            <span className="text-lg font-bold">
+                              {calculateDistribution().solverAmount}t
+                            </span>
+                          </span>
+                        </div>
+                        <div>
+                          <span className="border-b border-gray-300 pb-1 inline-block">
+                            <span className="text-sm text-gray-700">貢献者：</span>
+                            <span className="text-lg font-bold">
+                              {calculateDistribution().contributorAmount}t
+                            </span>
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+                    
+                    {/* 配布割合スライダー */}
+                    <div className="flex-shrink-0 ml-4 mt-6">
+                      <div className="relative w-4" style={{ height: '68px', marginTop: '8px' }}>
+                        {/* バー */}
+                        <div className="absolute left-1/2 transform -translate-x-1/2 w-1 h-full bg-gray-300 rounded-full"></div>
+                        {/* ドラッグ可能な丸 */}
+                        <div
+                          className="absolute left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-4 h-4 bg-black rounded-full cursor-pointer hover:scale-110 transition-transform"
+                          style={{ top: `${distributionRatio * 100}%` }}
+                          onMouseDown={(e) => {
+                            const startY = e.clientY;
+                            const startRatio = distributionRatio;
+                            
+                            const handleMouseMove = (e: MouseEvent) => {
+                              const deltaY = e.clientY - startY;
+                              const sliderHeight = 68; // 調整された高さ
+                              const newRatio = Math.max(0, Math.min(1, startRatio + (deltaY / sliderHeight)));
+                              setDistributionRatio(newRatio);
+                            };
+                            
+                            const handleMouseUp = () => {
+                              document.removeEventListener('mousemove', handleMouseMove);
+                              document.removeEventListener('mouseup', handleMouseUp);
+                            };
+                            
+                            document.addEventListener('mousemove', handleMouseMove);
+                            document.addEventListener('mouseup', handleMouseUp);
+                          }}
+                        />
+                      </div>
+                    </div>
+                  </div>
                 </div>
               </div>
             </div>
