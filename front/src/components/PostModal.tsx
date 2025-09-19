@@ -104,6 +104,22 @@ export default function PostModal({ isVisible, onClose, selectedLocation, user }
                     </button>
                   </div>
                 </div>
+                
+                {/* 概要入力欄 */}
+                <div className="mt-6">
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    概要
+                  </label>
+                  <textarea
+                    placeholder="プロジェクトの概要を入力してください..."
+                    className="w-full px-4 py-3 border border-gray-300 rounded-lg resize-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 placeholder-gray-400"
+                    rows={6}
+                    style={{
+                      backgroundColor: '#fafafa',
+                      boxShadow: '0 1px 3px rgba(0, 0, 0, 0.1)',
+                    }}
+                  />
+                </div>
               </div>
               
               {/* 右側のdiv (6の比率) */}
