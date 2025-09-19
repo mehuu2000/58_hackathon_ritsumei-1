@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { MagnifyingGlass, Triangle } from 'phosphor-react';
 
 interface NewsItem {
@@ -20,6 +20,24 @@ interface NewsComponentProps {
 
 export default function NewsComponent({ isExpanded, setIsExpanded }: NewsComponentProps) {
   const [searchQuery, setSearchQuery] = useState('');
+  const [showContent, setShowContent] = useState(false);
+  const [showFrame, setShowFrame] = useState(false);
+
+  // アニメーション制御
+  useEffect(() => {
+    if (isExpanded) {
+      // 開く時：即座に内容と枠を表示
+      setShowContent(true);
+      setShowFrame(true);
+    } else {
+      // 閉じる時：500ms後（アニメーション終了後）に内容と枠を非表示
+      const timer = setTimeout(() => {
+        setShowContent(false);
+        setShowFrame(false);
+      }, 500);
+      return () => clearTimeout(timer);
+    }
+  }, [isExpanded]);
 
   // モックデータ
   const [newsItems] = useState<NewsItem[]>([
@@ -118,12 +136,16 @@ export default function NewsComponent({ isExpanded, setIsExpanded }: NewsCompone
     <div className="fixed top-0 right-16 z-40 h-screen pointer-events-none">
       <div className="flex flex-col h-full">
         {/* ニュースパネル（常に存在、閉じている時は高さ0） */}
-        <div className={`w-80 self-center pointer-events-auto ${
+        <div className={`w-80 self-center pointer-events-auto transition-[height] duration-500 ease-out overflow-hidden ${
           isExpanded 
-            ? 'h-[70%] bg-white rounded-b-2xl shadow-xl border-l-2 border-r-2 border-b-2 border-gray-300 overflow-hidden' 
-            : 'h-0 overflow-hidden'
+            ? 'h-[70%]' 
+            : 'h-0'
+        } ${
+          showFrame
+            ? 'bg-white rounded-b-2xl shadow-xl border-l-2 border-r-2 border-b-2 border-gray-300'
+            : ''
         }`}>
-          {isExpanded && (
+          {showContent && (
             <div className="h-full flex flex-col">
               {/* ヘッダー */}
             <div className="p-4 border-b border-gray-200 flex-shrink-0">
