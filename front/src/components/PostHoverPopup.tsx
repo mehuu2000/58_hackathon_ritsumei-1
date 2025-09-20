@@ -30,13 +30,13 @@ export default function PostHoverPopup({ post, isVisible, position, mousePositio
 
   const totalReward = post.distribution_reward + post.direct_reward;
 
-  // ポップアップの位置を計算
+  // ポップアップの位置を計算（アイコン中心から固定距離で表示）
   const popupStyle: React.CSSProperties = {
     position: 'fixed',
-    top: mousePosition.y - 20,
+    top: mousePosition.y - 120, // アイコンの中心より上に表示
     [position === 'left' ? 'left' : 'right']: position === 'left' 
-      ? mousePosition.x + 20 
-      : window.innerWidth - mousePosition.x + 20,
+      ? mousePosition.x + 60  // アイコン右側に60px離れて表示
+      : window.innerWidth - mousePosition.x + 60, // アイコン左側に60px離れて表示
     zIndex: 1000,
     pointerEvents: 'none'
   };

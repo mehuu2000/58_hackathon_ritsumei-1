@@ -238,13 +238,18 @@ export default function MapContainer({ interactive = true, clickedPoint, onMapCl
                 console.log('投稿がクリックされました:', post.title);
               },
               mouseover: (e) => {
-                const event = e.originalEvent as MouseEvent;
+                // アイコンの中心位置を取得
+                const marker = e.target;
+                const map = marker._map;
+                const latLng = marker.getLatLng();
+                const point = map.latLngToContainerPoint(latLng);
+                
                 const centerX = window.innerWidth / 2;
-                const mouseX = event.clientX;
+                const iconCenterX = point.x;
                 
                 setHoveredPost(post);
-                setMousePosition({ x: mouseX, y: event.clientY });
-                setPopupPosition(mouseX < centerX ? 'left' : 'right');
+                setMousePosition({ x: iconCenterX, y: point.y });
+                setPopupPosition(iconCenterX < centerX ? 'left' : 'right');
               },
               mouseout: () => {
                 setHoveredPost(null);
