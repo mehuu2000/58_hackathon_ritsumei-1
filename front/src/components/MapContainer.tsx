@@ -133,53 +133,81 @@ function MapViewController({ clickedPoint }: { clickedPoint: { lat: number; lng:
 }
 
 // 投稿詳細表示時の地図移動を制御するコンポーネント
-function PostDetailViewController({ selectedPost }: { selectedPost: Post | null }) {
+function PostDetailViewController({ 
+  selectedPost, 
+  isDetailModalVisible 
+}: { 
+  selectedPost: Post | null;
+  isDetailModalVisible: boolean;
+}) {
   const map = useMap();
+  const [originalPostPosition, setOriginalPostPosition] = useState<{ lat: number; lng: number } | null>(null);
 
   useEffect(() => {
-    if (!selectedPost || !map) return;
+    if (!map) return;
 
-    // 画面サイズを取得
-    const container = map.getContainer();
-    const containerWidth = container.offsetWidth;
-    const containerHeight = container.offsetHeight;
-    
-    // 横軸3/4、縦軸1/2の位置に投稿を表示するため地図中心を計算
-    const targetScreenX = containerWidth * 3 / 4;
-    const targetScreenY = containerHeight / 2;
-    const centerScreenX = containerWidth / 2;
-    const centerScreenY = containerHeight / 2;
-    
-    // オフセット計算
-    const offsetPixelsX = centerScreenX - targetScreenX;
-    const offsetPixelsY = centerScreenY - targetScreenY;
-    
-    // ピクセルオフセットを緯度経度オフセットに変換
-    const currentCenter = map.getCenter();
-    const currentZoom = map.getZoom();
-    
-    // 東西方向（経度）のオフセットを計算
-    const metersPerPixelX = 40075016.686 * Math.cos(currentCenter.lat * Math.PI / 180) / Math.pow(2, currentZoom + 8);
-    const offsetMetersX = offsetPixelsX * metersPerPixelX;
-    const offsetLng = offsetMetersX / (111320 * Math.cos(currentCenter.lat * Math.PI / 180));
-    
-    // 南北方向（緯度）のオフセットを計算
-    const metersPerPixelY = 40075016.686 / Math.pow(2, currentZoom + 8);
-    const offsetMetersY = offsetPixelsY * metersPerPixelY;
-    const offsetLat = offsetMetersY / 111320;
-    
-    // 新しい中心位置を計算
-    const newCenter: [number, number] = [
-      selectedPost.lat + offsetLat, 
-      selectedPost.lng + offsetLng
-    ];
-    
-    // スムーズに移動
-    map.flyTo(newCenter, currentZoom, {
-      duration: 1.0, // 1秒でアニメーション
-    });
+    // モーダルが開かれた時の処理
+    if (selectedPost && isDetailModalVisible && !originalPostPosition) {
+      console.log('モーダル開く: アイコンを3/4位置に移動');
+      
+      // 元の位置を保存
+      setOriginalPostPosition({ lat: selectedPost.lat, lng: selectedPost.lng });
 
-  }, [selectedPost, map]);
+      // 画面サイズを取得
+      const container = map.getContainer();
+      const containerWidth = container.offsetWidth;
+      const containerHeight = container.offsetHeight;
+      
+      // 横軸3/4、縦軸1/2の位置に投稿を表示するため地図中心を計算
+      const targetScreenX = containerWidth * 3 / 4;
+      const targetScreenY = containerHeight / 2;
+      const centerScreenX = containerWidth / 2;
+      const centerScreenY = containerHeight / 2;
+      
+      // オフセット計算
+      const offsetPixelsX = centerScreenX - targetScreenX;
+      const offsetPixelsY = centerScreenY - targetScreenY;
+      
+      // ピクセルオフセットを緯度経度オフセットに変換
+      const currentCenter = map.getCenter();
+      const currentZoom = map.getZoom();
+      
+      // 東西方向（経度）のオフセットを計算
+      const metersPerPixelX = 40075016.686 * Math.cos(currentCenter.lat * Math.PI / 180) / Math.pow(2, currentZoom + 8);
+      const offsetMetersX = offsetPixelsX * metersPerPixelX;
+      const offsetLng = offsetMetersX / (111320 * Math.cos(currentCenter.lat * Math.PI / 180));
+      
+      // 南北方向（緯度）のオフセットを計算
+      const metersPerPixelY = 40075016.686 / Math.pow(2, currentZoom + 8);
+      const offsetMetersY = offsetPixelsY * metersPerPixelY;
+      const offsetLat = offsetMetersY / 111320;
+      
+      // 新しい中心位置を計算
+      const newCenter: [number, number] = [
+        selectedPost.lat + offsetLat, 
+        selectedPost.lng + offsetLng
+      ];
+      
+      // スムーズに移動
+      map.flyTo(newCenter, currentZoom, {
+        duration: 1.0, // 1秒でアニメーション
+      });
+    }
+    
+    // モーダルが閉じられた時の処理
+    if (!isDetailModalVisible && originalPostPosition) {
+      console.log('モーダル閉じる: アイコンを中心に戻す');
+      
+      // アイコンを画面中央に戻す
+      map.flyTo([originalPostPosition.lat, originalPostPosition.lng], map.getZoom(), {
+        duration: 1.0, // 1秒でアニメーション
+      });
+      
+      // 元の位置をクリア
+      setOriginalPostPosition(null);
+    }
+
+  }, [selectedPost, isDetailModalVisible, map, originalPostPosition]);
 
   return null;
 }
@@ -347,7 +375,10 @@ export default function MapContainer({ interactive = true, clickedPoint, onMapCl
         <MapViewController clickedPoint={clickedPoint || null} />
         
         {/* 投稿詳細表示時の地図移動制御 */}
-        <PostDetailViewController selectedPost={selectedPost} />
+        <PostDetailViewController 
+          selectedPost={selectedPost} 
+          isDetailModalVisible={isDetailModalVisible} 
+        />
         
         {/* 投稿のマーカー表示 */}
         {posts.map((post, index) => {
