@@ -6,6 +6,8 @@ import WoodenNavigation from '@/components/WoodenNavigation';
 import NewsComponent from '@/components/NewsComponent';
 import PostModeMessage from '@/components/PostModeMessage';
 import PostModal from '@/components/PostModal';
+import PostCard from '@/components/PostCard';
+import { mockPosts } from '@/data/mockPosts';
 
 // Leafletはクライアントサイドでのみ動作するため、dynamic importを使用
 const MapContainer = dynamic(() => import('@/components/MapContainer'), {
@@ -63,6 +65,8 @@ export default function HomePage() {
           interactive={true} 
           clickedPoint={clickedPoint}
           onMapClick={handleMapClick}
+          posts={mockPosts}
+          isPostMode={isPostMode}
         />
       </div>
       
@@ -80,6 +84,7 @@ export default function HomePage() {
       
       {/* 投稿モード時の案内メッセージ（場所未選択時のみ） */}
       <PostModeMessage isVisible={isPostMode && !clickedPoint} />
+      
       
       {/* 投稿モーダル */}
       <PostModal 
