@@ -65,7 +65,7 @@ const createPostIcon = (post: Post, isPostMode: boolean = false) => {
         padding: '4px 8px',
         borderRadius: '4px',
         boxShadow: '0 2px 4px rgba(0,0,0,0.2)',
-        fontSize: '10px',
+        fontSize: '9px',
         marginBottom: '4px',
         textAlign: 'center',
         width: '100px',
@@ -82,11 +82,31 @@ const createPostIcon = (post: Post, isPostMode: boolean = false) => {
         {truncateTitle(post.title)}
       </div>
       <div style={{ 
-        fontSize: '32px',
+        width: '36px',
+        height: '36px',
+        borderRadius: '50%',
+        overflow: 'hidden',
         filter: 'drop-shadow(0 1px 2px rgba(0,0,0,0.1))',
         pointerEvents: isPostMode ? 'none' : 'auto'
       }}>
-        {post.IconURL}
+        <img 
+          src={post.IconURL} 
+          alt={post.title}
+          style={{
+            width: '100%',
+            height: '100%',
+            objectFit: 'cover'
+          }}
+          onError={(e) => {
+            // 画像読み込みエラー時のフォールバック
+            e.currentTarget.style.display = 'none';
+            e.currentTarget.parentElement!.innerHTML = '📍';
+            e.currentTarget.parentElement!.style.display = 'flex';
+            e.currentTarget.parentElement!.style.alignItems = 'center';
+            e.currentTarget.parentElement!.style.justifyContent = 'center';
+            e.currentTarget.parentElement!.style.fontSize = '24px';
+          }}
+        />
       </div>
     </div>
   );

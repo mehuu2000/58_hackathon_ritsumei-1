@@ -51,9 +51,35 @@ export default function PostHoverPopup({ post, isVisible, position, mousePositio
         {post.title}
       </h3>
 
-      {/* 画像プレースホルダー */}
-      <div className="w-full h-32 bg-gray-100 rounded-lg mb-3 flex items-center justify-center">
-        <span className="text-4xl">{post.IconURL}</span>
+      {/* 画像表示 */}
+      <div className="w-full h-32 bg-gray-100 rounded-lg mb-3 flex items-center justify-center overflow-hidden">
+        {post.ImageURL ? (
+          <img
+            src={post.ImageURL}
+            alt={post.title}
+            className="w-full h-full object-cover"
+            onError={(e) => {
+              // 画像読み込みエラー時はアイコンにフォールバック
+              e.currentTarget.style.display = 'none';
+              const iconSpan = e.currentTarget.nextElementSibling as HTMLSpanElement;
+              if (iconSpan) iconSpan.style.display = 'block';
+            }}
+          />
+        ) : null}
+        <img
+          src={post.IconURL}
+          alt={post.title}
+          className="w-full h-full object-cover"
+          style={{ display: post.ImageURL ? 'none' : 'block' }}
+          onError={(e) => {
+            // IconURL画像読み込みエラー時のフォールバック
+            e.currentTarget.style.display = 'none';
+            const parent = e.currentTarget.parentElement;
+            if (parent) {
+              parent.innerHTML = '<span class="text-4xl">📍</span>';
+            }
+          }}
+        />
       </div>
 
       {/* 配布トークン総数 */}

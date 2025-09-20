@@ -18,6 +18,7 @@ export interface Post {
   lng: number;
   title: string;
   IconURL: string;
+  ImageURL?: string;
   discription: string;
   tag_list: Tag[];
   distribution_reward: number;
@@ -36,7 +37,8 @@ export const mockPosts: Post[] = [
     lat: 34.7024854,
     lng: 135.4937621,
     title: "公園の清掃プロジェクト",
-    IconURL: "🌳",
+    IconURL: "https://images.unsplash.com/photo-1441974231531-c6227db76b6e?w=100&h=100&fit=crop",
+    ImageURL: "https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=400&h=300&fit=crop",
     discription: "地域の公園にゴミが散乱しています。みんなで協力して美しい公園を取り戻しましょう！",
     tag_list: [
       { name: "環境", attribute: true },
@@ -71,7 +73,8 @@ export const mockPosts: Post[] = [
     lat: 34.7100000,
     lng: 135.5000000,
     title: "高齢者向けスマホ教室",
-    IconURL: "📱",
+    IconURL: "https://images.unsplash.com/photo-1556075798-4825dfaaf498?w=100&h=100&fit=crop",
+    // ImageURLなし（アイコンを使用）
     discription: "デジタルデバイドを解消し、高齢者の方にもスマートフォンを活用していただけるよう支援します。",
     tag_list: [
       { name: "教育", attribute: true },
@@ -100,7 +103,8 @@ export const mockPosts: Post[] = [
     lat: 34.6950000,
     lng: 135.4800000,
     title: "地域防災訓練の企画",
-    IconURL: "🚨",
+    IconURL: "https://images.unsplash.com/photo-1584464491033-06628f3a6b7b?w=100&h=100&fit=crop",
+    ImageURL: "https://images.unsplash.com/photo-1565043589221-1a6fd9ae45c7?w=400&h=300&fit=crop",
     discription: "災害に備えて、地域住民の防災意識を高める訓練を企画しています。避難経路の確認や応急手当の練習を行います。",
     tag_list: [
       { name: "防災", attribute: true },
