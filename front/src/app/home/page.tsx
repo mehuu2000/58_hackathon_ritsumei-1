@@ -30,9 +30,43 @@ export default function HomePage() {
   const [clickedPoint, setClickedPoint] = useState<{ lat: number; lng: number } | null>(null);
   const [isPostMode, setIsPostMode] = useState(false);
   const [isPostModalVisible, setIsPostModalVisible] = useState(false);
-  const [posts, setPosts] = useState<Post[]>(mockPosts);
+  const [posts, setPosts] = useState<Post[]>([]);
   const [user, setUser] = useState<User | null>(null);
   const [isLoadingUser, setIsLoadingUser] = useState(true);
+
+  // 投稿データを取得する関数
+  const fetchPosts = async (accessToken: string) => {
+    try {
+      const response = await fetch('http://bomu.info:8000/posts', {
+        method: 'GET',
+        headers: {
+          'Authorization': `Bearer ${accessToken}`,
+          'Content-Type': 'application/json'
+        }
+      });
+
+      if (response.ok) {
+        const postsData = await response.json();
+        console.log('取得した投稿データ:', postsData);
+        
+        // APIレスポンスは {posts: [...]} の形式
+        if (postsData && postsData.posts && Array.isArray(postsData.posts)) {
+          setPosts(postsData.posts);
+        } else {
+          console.error('APIレスポンスが期待する形式ではありません:', postsData);
+          setPosts(mockPosts);
+        }
+      } else {
+        console.error('投稿データ取得失敗:', response.statusText);
+        // エラー時はモックデータを使用
+        setPosts(mockPosts);
+      }
+    } catch (error) {
+      console.error('投稿データ取得エラー:', error);
+      // エラー時はモックデータを使用
+      setPosts(mockPosts);
+    }
+  };
 
   // fetchAPIでユーザー情報を取得
   useEffect(() => {
@@ -70,6 +104,9 @@ export default function HomePage() {
           };
           
           setUser(user);
+          
+          // ユーザー情報取得成功後、投稿データも取得
+          await fetchPosts(accessToken);
         } else {
           console.error('ユーザー情報取得失敗:', response.statusText);
           // 認証エラーの場合はログインページに戻す
@@ -129,6 +166,17 @@ export default function HomePage() {
     setUser(prevUser => prevUser ? { ...prevUser, token: newTokenCount } : null);
   };
 
+  // コメント追加機能
+  const handleCommentAdd = (postId: string, newComment: any) => {
+    setPosts(prevPosts => 
+      prevPosts.map(post => 
+        post.id === postId 
+          ? { ...post, comment: [newComment, ...post.comment] }
+          : post
+      )
+    );
+  };
+
   return (
     <main className="relative h-screen w-screen overflow-hidden">
       {/* 地図を画面いっぱいに表示 */}
@@ -140,6 +188,7 @@ export default function HomePage() {
           posts={posts}
           isPostMode={isPostMode}
           user={user}
+          onCommentAdd={handleCommentAdd}
         />
       </div>
       

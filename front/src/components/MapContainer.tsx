@@ -24,6 +24,7 @@ interface MapContainerProps {
   posts?: Post[];
   isPostMode?: boolean;
   user: User;
+  onCommentAdd?: (postId: string, newComment: any) => void;
 }
 
 const TOKYO_POSITION: [number, number] = [35.6812, 139.7671]; // 東京駅
@@ -221,7 +222,7 @@ function PostDetailViewController({
   return null;
 }
 
-export default function MapContainer({ interactive = true, clickedPoint, onMapClick, posts = [], isPostMode = false, user }: MapContainerProps) {
+export default function MapContainer({ interactive = true, clickedPoint, onMapClick, posts = [], isPostMode = false, user, onCommentAdd }: MapContainerProps) {
   console.log('MapContainer props:', { postsCount: posts.length, isPostMode, interactive });
   
   const [position, setPosition] = useState<[number, number]>(TOKYO_POSITION);
@@ -482,6 +483,7 @@ export default function MapContainer({ interactive = true, clickedPoint, onMapCl
         onClose={handleCloseModal}
         onAnimationComplete={handleAnimationComplete}
         user={user}
+        onCommentAdd={onCommentAdd}
       />
     </div>
   );
