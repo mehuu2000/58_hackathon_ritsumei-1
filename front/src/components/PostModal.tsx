@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useRef } from 'react';
 import { X, User, Plus, Image, Upload, ArrowRight, Calendar } from 'phosphor-react';
+import { Post } from '@/data/mockPosts';
 
 interface User {
   uid: string;
@@ -10,40 +11,6 @@ interface User {
   access_token: string;
   email: string;
   created_at: string;
-}
-
-interface Post {
-  id: string;
-  user_name?: string;
-  prefectures: string;
-  lat: number;
-  lng: number;
-  title: string;
-  IconURL: string;
-  ImageURL?: string;
-  discription: string;
-  tag_list: Array<{
-    name: string;
-    attribute: boolean;
-  }>;
-  distribution_reward: number;
-  direct_reward: number;
-  post_time: string;
-  post_limit: string;
-  achivement?: {
-    id: string;
-    name: string;
-  };
-  post_good: number;
-  comment: Array<{
-    id: string;
-    name?: string;
-    context: string;
-    comment_time: string;
-    post_id: string;
-    comment_good: number;
-  }>;
-  best_answer_id?: string;
 }
 interface PostModalProps {
   isVisible: boolean;

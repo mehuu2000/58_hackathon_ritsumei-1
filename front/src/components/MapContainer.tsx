@@ -24,6 +24,7 @@ interface MapContainerProps {
   posts?: Post[];
   isPostMode?: boolean;
   user: User;
+  onCommentAdd?: (postId: string, newComment: any) => void;
 }
 
 const TOKYO_POSITION: [number, number] = [35.6812, 139.7671]; // 東京駅
@@ -221,7 +222,7 @@ function PostDetailViewController({
   return null;
 }
 
-export default function MapContainer({ interactive = true, clickedPoint, onMapClick, posts = [], isPostMode = false, user }: MapContainerProps) {
+export default function MapContainer({ interactive = true, clickedPoint, onMapClick, posts = [], isPostMode = false, user, onCommentAdd }: MapContainerProps) {
   console.log('MapContainer props:', { postsCount: posts.length, isPostMode, interactive });
   
   const [position, setPosition] = useState<[number, number]>(TOKYO_POSITION);
@@ -229,7 +230,10 @@ export default function MapContainer({ interactive = true, clickedPoint, onMapCl
   const [hoveredPost, setHoveredPost] = useState<Post | null>(null);
   const [mousePosition, setMousePosition] = useState<{ x: number; y: number }>({ x: 0, y: 0 });
   const [popupPosition, setPopupPosition] = useState<'left' | 'right'>('right');
-  const [selectedPost, setSelectedPost] = useState<Post | null>(null);
+  const [selectedPostId, setSelectedPostId] = useState<string | null>(null);
+  
+  // selectedPostIdに基づいて、posts配列から最新の投稿データを取得
+  const selectedPost = selectedPostId ? posts.find(post => post.id === selectedPostId) || null : null;
   const [isDetailModalVisible, setIsDetailModalVisible] = useState(false);
   const hoverTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
@@ -331,9 +335,9 @@ export default function MapContainer({ interactive = true, clickedPoint, onMapCl
     setHoveredPost(null);
     
     console.log('モーダル表示設定開始');
-    setSelectedPost(post);
+    setSelectedPostId(post.id);
     setIsDetailModalVisible(true);
-    console.log('selectedPost設定:', post.title);
+    console.log('selectedPostId設定:', post.id);
     console.log('isDetailModalVisible設定: true');
     console.log('=== handlePostClick実行完了 ===');
   };
@@ -345,7 +349,7 @@ export default function MapContainer({ interactive = true, clickedPoint, onMapCl
 
   // アニメーション完了時の処理
   const handleAnimationComplete = () => {
-    setSelectedPost(null);
+    setSelectedPostId(null);
   };
 
 
@@ -482,6 +486,7 @@ export default function MapContainer({ interactive = true, clickedPoint, onMapCl
         onClose={handleCloseModal}
         onAnimationComplete={handleAnimationComplete}
         user={user}
+        onCommentAdd={onCommentAdd}
       />
     </div>
   );
