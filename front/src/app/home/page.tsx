@@ -7,7 +7,7 @@ import NewsComponent from '@/components/NewsComponent';
 import PostModeMessage from '@/components/PostModeMessage';
 import PostModal from '@/components/PostModal';
 import PostCard from '@/components/PostCard';
-import { mockPosts } from '@/data/mockPosts';
+import { mockPosts, Post } from '@/data/mockPosts';
 
 // Leafletはクライアントサイドでのみ動作するため、dynamic importを使用
 const MapContainer = dynamic(() => import('@/components/MapContainer'), {
@@ -18,8 +18,9 @@ const MapContainer = dynamic(() => import('@/components/MapContainer'), {
 // ユーザーの型定義
 interface User {
   uid: string;
-  display_name: string;
+  display_name?: string;
   token: number;
+  access_token: string;
   email: string;
   created_at: string;
 }
@@ -29,12 +30,14 @@ export default function HomePage() {
   const [clickedPoint, setClickedPoint] = useState<{ lat: number; lng: number } | null>(null);
   const [isPostMode, setIsPostMode] = useState(false);
   const [isPostModalVisible, setIsPostModalVisible] = useState(false);
+  const [posts, setPosts] = useState<Post[]>(mockPosts);
   
   // ユーザーのモックデータ
   const [user] = useState<User>({
     uid: '12345678-1234-1234-1234-123456789abc',
     display_name: '山田太郎',
     token: 1250,
+    access_token: 'abcdefg1234567',
     email: 'yamada@example.com',
     created_at: '2025-01-15T10:30:00Z'
   });
@@ -57,6 +60,11 @@ export default function HomePage() {
     }
   };
 
+  // 新しい投稿を配列の先頭に追加する関数
+  const handlePostSubmit = (newPost: Post) => {
+    setPosts(prevPosts => [newPost, ...prevPosts]);
+  };
+
   return (
     <main className="relative h-screen w-screen overflow-hidden">
       {/* 地図を画面いっぱいに表示 */}
@@ -65,8 +73,9 @@ export default function HomePage() {
           interactive={true} 
           clickedPoint={clickedPoint}
           onMapClick={handleMapClick}
-          posts={mockPosts}
+          posts={posts}
           isPostMode={isPostMode}
+          user={user}
         />
       </div>
       
@@ -92,6 +101,7 @@ export default function HomePage() {
         onClose={() => setIsPostModalVisible(false)}
         selectedLocation={clickedPoint}
         user={user}
+        onPostSubmit={handlePostSubmit}
       />
     </main>
   );

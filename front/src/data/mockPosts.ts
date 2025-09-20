@@ -5,7 +5,7 @@ export interface Tag {
 
 export interface Comment {
   id: string;
-  name: string;
+  name?: string;
   context: string;
   comment_time: string;
   post_id: string;
@@ -19,7 +19,7 @@ export interface Achievement {
 
 export interface Post {
   id: string;
-  user_name: string;
+  user_name?: string;
   prefectures: string;
   lat: number;
   lng: number;
@@ -27,14 +27,28 @@ export interface Post {
   IconURL: string;
   ImageURL?: string;
   discription: string;
-  tag_list: Tag[];
+  tag_list: Array<{
+    name: string;
+    attribute: boolean;
+  }>;
   distribution_reward: number;
   direct_reward: number;
   post_time: string;
   post_limit: string;
-  achivement: Achievement;
+  achivement?: {
+    id: string;
+    name: string;
+  };
   post_good: number;
-  comment: Comment[];
+  comment: Array<{
+    id: string;
+    name?: string;
+    context: string;
+    comment_time: string;
+    post_id: string;
+    comment_good: number;
+  }>;
+  best_answer_id?: string;
 }
 
 export const mockPosts: Post[] = [
@@ -77,8 +91,17 @@ export const mockPosts: Post[] = [
         comment_time: "2025-09-19T14:30:00Z",
         post_id: "post_001",
         comment_good: 3
+      },
+      {
+        id: "comment_003",
+        name: "鈴木一郎",
+        context: "私は毎週日曜日の9時から清掃活動をしています。集合場所は公園の東側入口です。ゴミ袋と軍手は用意しますので、汚れても良い服装でお越しください。",
+        comment_time: "2025-09-19T16:45:00Z",
+        post_id: "post_001",
+        comment_good: 12
       }
-    ]
+    ],
+    best_answer_id: "comment_003"
   },
   {
     id: "post_002",
