@@ -1,38 +1,38 @@
-# フロントエンド関連のコマンド
+### フロントエンド関連のコマンド ###
 
 # フロントエンドのDockerイメージをビルドして起動
 front-build:
-	(cd front_docker && docker-compose up -b --build)
+	(cd front_docker && docker-compose up -d --build)
 
 # フロントエンドのDockerコンテナを起動（ビルド済み前提）
 front-up:
-	(cd front_docker && docker-compose up -b)
+	(cd front_docker && docker-compose up -d)
 
 # フロントエンドのDockerコンテナを停止
 front-stop:
-	(cd front_docker && docker-compose down)
+	(cd front_docker && docker-compose stop)
 
 # フロントエンドのDockerコンテナを再起動
 front-restart: front-stop front-up
 
-# バックエンド関連のコマンド
+### バックエンド関連のコマンド ###
 
 # バックエンドのDockerイメージをビルドして起動
 backend-build:
-	(cd back_docker && docker-compose up -b --build)
+	(cd backend && docker-compose up -d --build)
 
 # バックエンドのDockerコンテナを起動（ビルド済み前提）
 backend-up:
-	(cd back_docker && docker-compose up -b)
+	(cd backend && docker-compose up -d)
 
 # バックエンドのDockerコンテナを停止
 backend-stop:
-	(cd back_docker && docker-compose down)
+	(cd backend && docker-compose stop)
 
 # バックエンドのDockerコンテナを再起動
 backend-restart: backend-stop backend-up
 
-# フロント・バック統合コマンド
+### フロント・バック統合コマンド ###
 
 # フロントエンドとバックエンドの両方をビルド
 build: front-build backend-build
@@ -56,6 +56,9 @@ endif
 
 # アプリケーションを起動してブラウザを開く
 run: up open-browser
+
+# アプリケーションをビルドして起動し、ブラウザを開く
+start: build run
 
 # アプリケーションのURLを表示
 url:
