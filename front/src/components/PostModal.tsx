@@ -204,18 +204,18 @@ export default function PostModal({ isVisible, onClose, selectedLocation, user, 
         IconURL: IconURL || '',
         detail: description,
         selectTag: selectedTag,
-        subTags: subTags.length > 0 ? subTags : '',
+        subTags: subTags,
         selectedImage: selectedImage || '',
         distribution_reward: Math.round(parseInt(rewardAmount || '0') * distributionRatio),
         direct_reward: Math.round(parseInt(rewardAmount || '0') * (1 - distributionRatio)),
         latitude: selectedLocation?.lat,
         longitude: selectedLocation?.lng,
         achievementName: achievementName || null,
-        post_limit: `${deadlineYear}-${deadlineMonth.padStart(2, '0')}-${deadlineDay.padStart(2, '0')}`
+        post_limit: `${deadlineYear}-${deadlineMonth.padStart(2, '0')}-${deadlineDay.padStart(2, '0')}T23:59:59.000Z`
       };
 
       // APIリクエスト送信
-      const response = await fetch('http://bomu.info:8000/api/posts', {
+      const response = await fetch('http://bomu.info:8000/posts', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
