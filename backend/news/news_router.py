@@ -2,6 +2,7 @@ print("★★★★★ news_router.py is being loaded! ★★★★★")
 import os
 import httpx
 import uuid
+import asyncio
 from fastapi import APIRouter, HTTPException
 from typing import List
 from pydantic import BaseModel, Field
@@ -56,8 +57,8 @@ async def get_news_by_location(location: LocationRequest):
         "max": 2,
     }
 
-    async with httpx.AsyncClient() as client:
-        try:
+    try:
+        async with httpx.AsyncClient() as client:
             response = await client.get(gnews_api_url, params=params)
             response.raise_for_status()
             data = response.json()
@@ -66,6 +67,7 @@ async def get_news_by_location(location: LocationRequest):
             if not articles:
                  raise HTTPException(status_code=404, detail=f"「{prefecture}」に関するニュースが見つかりませんでした。")
             
+            save_tasks = []
             for article in articles:
                 # データベースの設計図に合わせてデータを整形
                 article_to_save = {
@@ -81,12 +83,15 @@ async def get_news_by_location(location: LocationRequest):
                     "prefectures": prefecture
                 }
                 # ループの中で、1件ずつデータベース保存サービスを呼び出す
-                await save_article_if_not_exists(article_to_save)
+                save_tasks.append(save_article_if_not_exists(article_to_save))
             
-            # ★ すべてのループ処理が終わった後に、結果を返す
-            return articles
-        
-        except httpx.RequestError as e:
-            raise HTTPException(status_code=502, detail=f"GNews APIへの接続に失敗しました: {e}")
-    
-            # データベース保存サービスを呼び出す
+            # すべての保存タスクを並行して実行
+        await asyncio.gather(*save_tasks)
+
+        # GNewsから取得した記事リストを返す
+        return articles
+    except httpx.RequestError as e:
+        raise HTTPException(status_code=502, detail=f"GNews APIへの接続に失敗しました: {e}")
+    except Exception as e:
+        # データベース保存時のエラーなど、その他の予期せぬエラーをキャッチ
+        raise HTTPException(status_code=500, detail=f"内部サーバーエラー: {e}")
