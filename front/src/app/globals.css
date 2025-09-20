@@ -1,0 +1,123 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+@import "leaflet/dist/leaflet.css";
+
+:root {
+  --background: #ffffff;
+  --foreground: #171717;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --background: #0a0a0a;
+    --foreground: #ededed;
+  }
+}
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+html, body {
+  height: 100%;
+  overflow: hidden;
+  background: #ffffff;
+  color: #000000;
+  font-family: Arial, Helvetica, sans-serif;
+}
+
+/* デフォルトのテキスト色を黒に設定（個別指定が優先される） */
+* {
+  color: inherit;
+}
+
+/* Leaflet CSS fixes */
+.leaflet-container {
+  height: 100% !important;
+  width: 100% !important;
+  z-index: 1 !important;
+  background: #aaa !important;
+}
+
+/* ズームコントロールのみ非表示、attributionは表示 */
+.leaflet-control-zoom {
+  display: none;
+}
+
+/* Leaflet タイル読み込み対応 */
+.leaflet-tile {
+  max-width: none !important;
+  max-height: none !important;
+}
+
+.leaflet-tile-pane {
+  z-index: 1;
+}
+
+/* 地図が確実に表示されるように */
+.leaflet-map-pane {
+  z-index: 1 !important;
+}
+
+.leaflet-tile-container {
+  z-index: 1 !important;
+}
+
+/* カスタム投稿アイコンのクリック制御 */
+.post-mode-enabled {
+  pointer-events: auto !important;
+  cursor: pointer !important;
+}
+
+.post-mode-disabled {
+  pointer-events: none !important;
+  cursor: default !important;
+}
+
+/* カスタムアイコンのスタイル */
+.custom-icon-wrapper {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  pointer-events: none;
+}
+
+.custom-icon-title {
+  background: white;
+  padding: 4px 8px;
+  border-radius: 4px;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+  font-size: 9px;
+  margin-bottom: 4px;
+  text-align: center;
+  width: 100px;
+  font-weight: 500;
+  line-height: 1.2;
+  height: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  word-wrap: break-word;
+  overflow: hidden;
+  pointer-events: none;
+}
+
+.custom-icon-image {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  overflow: hidden;
+  filter: drop-shadow(0 1px 2px rgba(0,0,0,0.1));
+  pointer-events: none;
+}
+
+.custom-icon-image img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  pointer-events: none;
+}
