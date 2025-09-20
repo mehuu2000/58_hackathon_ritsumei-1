@@ -1,15 +1,19 @@
 'use client';
 
 import { MapContainer as LeafletMapContainer, TileLayer, useMapEvents, Marker, useMap } from 'react-leaflet';
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import L from 'leaflet';
 import { renderToString } from 'react-dom/server';
 import { MapPin } from 'phosphor-react';
+import { Post } from '@/data/mockPosts';
+import PostHoverPopup from './PostHoverPopup';
 
 interface MapContainerProps {
   interactive?: boolean;
   clickedPoint?: { lat: number; lng: number } | null;
   onMapClick?: (lat: number, lng: number) => void;
+  posts?: Post[];
+  isPostMode?: boolean;
 }
 
 const TOKYO_POSITION: [number, number] = [35.6812, 139.7671]; // 東京駅
@@ -40,6 +44,78 @@ const createCustomIcon = (lat: number, lng: number) => {
     html: iconHtml,
     iconSize: [130, 90],
     iconAnchor: [65, 90],
+  });
+};
+
+// 投稿用のカスタムアイコンを作成
+const createPostIcon = (post: Post, isPostMode: boolean = false) => {
+  // タイトルを2行に制限する関数
+  const truncateTitle = (title: string, maxLength: number = 20) => {
+    if (title.length <= maxLength) {
+      return title;
+    }
+    // 2行分の長さを超える場合は省略
+    return title.substring(0, maxLength - 3) + '...';
+  };
+
+  const iconHtml = renderToString(
+    <div style={{ position: 'relative', display: 'flex', flexDirection: 'column', alignItems: 'center', pointerEvents: isPostMode ? 'none' : 'auto' }}>
+      <div style={{
+        background: 'white',
+        padding: '4px 8px',
+        borderRadius: '4px',
+        boxShadow: '0 2px 4px rgba(0,0,0,0.2)',
+        fontSize: '9px',
+        marginBottom: '4px',
+        textAlign: 'center',
+        width: '100px',
+        fontWeight: '500',
+        lineHeight: '1.2',
+        height: '24px',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        wordWrap: 'break-word',
+        overflow: 'hidden',
+        pointerEvents: isPostMode ? 'none' : 'auto'
+      }}>
+        {truncateTitle(post.title)}
+      </div>
+      <div style={{ 
+        width: '36px',
+        height: '36px',
+        borderRadius: '50%',
+        overflow: 'hidden',
+        filter: 'drop-shadow(0 1px 2px rgba(0,0,0,0.1))',
+        pointerEvents: isPostMode ? 'none' : 'auto'
+      }}>
+        <img 
+          src={post.IconURL} 
+          alt={post.title}
+          style={{
+            width: '100%',
+            height: '100%',
+            objectFit: 'cover'
+          }}
+          onError={(e) => {
+            // 画像読み込みエラー時のフォールバック
+            e.currentTarget.style.display = 'none';
+            e.currentTarget.parentElement!.innerHTML = '📍';
+            e.currentTarget.parentElement!.style.display = 'flex';
+            e.currentTarget.parentElement!.style.alignItems = 'center';
+            e.currentTarget.parentElement!.style.justifyContent = 'center';
+            e.currentTarget.parentElement!.style.fontSize = '24px';
+          }}
+        />
+      </div>
+    </div>
+  );
+
+  return L.divIcon({
+    className: 'custom-post-icon',
+    html: iconHtml,
+    iconSize: [120, 80],
+    iconAnchor: [60, 80],
   });
 };
 
@@ -93,9 +169,42 @@ function MapViewController({ clickedPoint }: { clickedPoint: { lat: number; lng:
   return null;
 }
 
-export default function MapContainer({ interactive = true, clickedPoint, onMapClick }: MapContainerProps) {
+export default function MapContainer({ interactive = true, clickedPoint, onMapClick, posts = [], isPostMode = false }: MapContainerProps) {
   const [position, setPosition] = useState<[number, number]>(TOKYO_POSITION);
   const [isLoading, setIsLoading] = useState(true);
+  const [hoveredPost, setHoveredPost] = useState<Post | null>(null);
+  const [mousePosition, setMousePosition] = useState<{ x: number; y: number }>({ x: 0, y: 0 });
+  const [popupPosition, setPopupPosition] = useState<'left' | 'right'>('right');
+  const hoverTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+
+  // グローバルマウス監視で確実にクリア
+  useEffect(() => {
+    const handleGlobalMouseMove = (e: MouseEvent) => {
+      if (!hoveredPost) return;
+      
+      // ポップアップとアイコンの領域外をチェック
+      const target = e.target as HTMLElement;
+      const isOverPopup = target.closest('.hover-popup');
+      const isOverIcon = target.closest('.custom-post-icon');
+      
+      if (!isOverPopup && !isOverIcon) {
+        // 領域外なら即座に非表示
+        if (hoverTimeoutRef.current) {
+          clearTimeout(hoverTimeoutRef.current);
+        }
+        setHoveredPost(null);
+      }
+    };
+
+    document.addEventListener('mousemove', handleGlobalMouseMove);
+    
+    return () => {
+      document.removeEventListener('mousemove', handleGlobalMouseMove);
+      if (hoverTimeoutRef.current) {
+        clearTimeout(hoverTimeoutRef.current);
+      }
+    };
+  }, [hoveredPost]);
 
   useEffect(() => {
     console.log('MapContainer mounted, interactive:', interactive);
@@ -134,6 +243,7 @@ export default function MapContainer({ interactive = true, clickedPoint, onMapCl
     console.log('地図がクリックされました:', lat, lng);
   };
 
+
   if (isLoading) {
     return (
       <div style={{ height: '100%', width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#aaa' }}>
@@ -168,6 +278,35 @@ export default function MapContainer({ interactive = true, clickedPoint, onMapCl
         {/* 地図の中心移動制御 */}
         <MapViewController clickedPoint={clickedPoint || null} />
         
+        {/* 投稿のマーカー表示 */}
+        {posts.map((post, index) => (
+          <Marker
+            key={index}
+            position={[post.lat, post.lng]}
+            icon={createPostIcon(post, isPostMode)}
+            eventHandlers={!isPostMode ? {
+              click: () => {
+                console.log('投稿がクリックされました:', post.title);
+              },
+              mouseover: (e) => {
+                // アイコンの中心位置を取得
+                const marker = e.target;
+                const map = marker._map;
+                const latLng = marker.getLatLng();
+                const point = map.latLngToContainerPoint(latLng);
+                
+                const centerX = window.innerWidth / 2;
+                const iconCenterX = point.x;
+                
+                // 即座に表示
+                setHoveredPost(post);
+                setMousePosition({ x: iconCenterX, y: point.y });
+                setPopupPosition(iconCenterX < centerX ? 'left' : 'right');
+              }
+            } : {}}
+          />
+        ))}
+        
         {/* クリックされた地点のマーカー表示 */}
         {clickedPoint && (
           <Marker
@@ -176,6 +315,16 @@ export default function MapContainer({ interactive = true, clickedPoint, onMapCl
           />
         )}
       </LeafletMapContainer>
+
+      {/* ホバーポップアップ */}
+      {hoveredPost && (
+        <PostHoverPopup
+          post={hoveredPost}
+          isVisible={true}
+          position={popupPosition}
+          mousePosition={mousePosition}
+        />
+      )}
     </div>
   );
 }

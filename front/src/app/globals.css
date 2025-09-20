@@ -24,9 +24,14 @@
 html, body {
   height: 100%;
   overflow: hidden;
-  background: var(--background);
-  color: var(--foreground);
+  background: #ffffff;
+  color: #000000;
   font-family: Arial, Helvetica, sans-serif;
+}
+
+/* デフォルトのテキスト色を黒に設定（個別指定が優先される） */
+* {
+  color: inherit;
 }
 
 /* Leaflet CSS fixes */
