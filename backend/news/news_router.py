@@ -6,11 +6,15 @@ from pydantic import BaseModel, Field
 from backend.news.services.gsi_service import get_prefecture_from_coords
 
 # --- データ構造（Pydanticモデル）の定義 ---
+
+class NewsSource(BaseModel):
+    name: str | None = None
+    url: str | None = None
 class NewsArticle(BaseModel):
     title: str
     description: str | None = None
     url: str
-    source: str | None = None
+    source: NewsSource | None = None
     publishedAt: str | None = None
 
 class LocationRequest(BaseModel):   
@@ -23,6 +27,9 @@ router = APIRouter(prefix="/news", tags=["news"])
 
 GNEWS_API_KEY = os.getenv("GNEWS_API_KEY")
 
+@router.get("/test")
+def hello_check():
+    return {"message": "News router is loaded correctly!"}
 
 @router.post("/get-news-by-location", response_model=List[NewsArticle])
 async def get_news_by_location(location: LocationRequest):

@@ -1,4 +1,5 @@
 import httpx
+import json
 
 async def get_prefecture_from_coords(lat: float, lon: float) -> str | None:
     """国土地理院のAPIを使い、緯度経度から都道府県名を取得する"""
@@ -12,6 +13,7 @@ async def get_prefecture_from_coords(lat: float, lon: float) -> str | None:
         try:
             response = await client.get(gsi_api_url)
             print(f"Response Status Code: {response.status_code}")
+            
             try:
                 # レスポンスがJSON形式であれば、整形して表示
                 print(f"Response Body: {json.dumps(response.json(), indent=2, ensure_ascii=False)}")
@@ -19,7 +21,7 @@ async def get_prefecture_from_coords(lat: float, lon: float) -> str | None:
                 # JSONでなければそのまま表示
                 print(f"Response Body (not JSON): {response.text}")
             print("-------------------------")
-            
+
             response.raise_for_status()
             data = response.json()
             
