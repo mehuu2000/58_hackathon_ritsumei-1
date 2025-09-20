@@ -8,9 +8,10 @@ interface PostDetailModalProps {
   post: Post | null;
   isVisible: boolean;
   onClose: () => void;
+  onAnimationComplete?: () => void;
 }
 
-export default function PostDetailModal({ post, isVisible, onClose }: PostDetailModalProps) {
+export default function PostDetailModal({ post, isVisible, onClose, onAnimationComplete }: PostDetailModalProps) {
   const [showContent, setShowContent] = useState(false);
   const [showFrame, setShowFrame] = useState(false);
   const [isExpanded, setIsExpanded] = useState(false);
@@ -43,6 +44,10 @@ export default function PostDetailModal({ post, isVisible, onClose }: PostDetail
       const timer = setTimeout(() => {
         setShowContent(false);
         setShowFrame(false);
+        // アニメーション完了を親に通知
+        if (onAnimationComplete) {
+          onAnimationComplete();
+        }
       }, 500);
       return () => clearTimeout(timer);
     }

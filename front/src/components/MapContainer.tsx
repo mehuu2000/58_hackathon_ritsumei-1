@@ -304,6 +304,10 @@ export default function MapContainer({ interactive = true, clickedPoint, onMapCl
   // モーダルを閉じる処理
   const handleCloseModal = () => {
     setIsDetailModalVisible(false);
+  };
+
+  // アニメーション完了時の処理
+  const handleAnimationComplete = () => {
     setSelectedPost(null);
   };
 
@@ -436,6 +440,7 @@ export default function MapContainer({ interactive = true, clickedPoint, onMapCl
         post={selectedPost}
         isVisible={isDetailModalVisible}
         onClose={handleCloseModal}
+        onAnimationComplete={handleAnimationComplete}
       />
     </div>
   );
