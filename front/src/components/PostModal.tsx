@@ -51,9 +51,10 @@ interface PostModalProps {
   selectedLocation?: { lat: number; lng: number } | null;
   user: User;
   onPostSubmit: (newPost: Post) => void;
+  onUserTokenUpdate: (newTokenCount: number) => void;
 }
 
-export default function PostModal({ isVisible, onClose, selectedLocation, user, onPostSubmit }: PostModalProps) {
+export default function PostModal({ isVisible, onClose, selectedLocation, user, onPostSubmit, onUserTokenUpdate }: PostModalProps) {
   const [showContent, setShowContent] = useState(false);
   const [showFrame, setShowFrame] = useState(false);
   
@@ -150,6 +151,39 @@ export default function PostModal({ isVisible, onClose, selectedLocation, user, 
     }
   };
 
+  // アチーブメント生成処理
+  const handleGenerateAchievement = async () => {
+    try {
+      const response = await fetch('http://bomu.info:8000/generate-achivement', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${user.access_token}`
+        },
+        body: JSON.stringify({
+          title: title,
+          detail: description
+        })
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        
+        // アチーブメント名を設定
+        setAchievementName(data.name);
+        
+        // ユーザーのトークン数を更新
+        onUserTokenUpdate(data.token_after);
+        console.log('アチーブメント生成成功:', data);
+        console.log('更新後のユーザートークン:', data.token_after);
+      } else {
+        console.error('アチーブメント生成失敗:', response.statusText);
+      }
+    } catch (error) {
+      console.error('アチーブメント生成エラー:', error);
+    }
+  };
+
   // 投稿可能かどうかの判定
   const canPost = () => {
     return title.trim() && 
@@ -170,18 +204,18 @@ export default function PostModal({ isVisible, onClose, selectedLocation, user, 
         IconURL: IconURL || '',
         detail: description,
         selectTag: selectedTag,
-        subTags: subTags.length > 0 ? subTags : '',
+        subTags: subTags,
         selectedImage: selectedImage || '',
         distribution_reward: Math.round(parseInt(rewardAmount || '0') * distributionRatio),
         direct_reward: Math.round(parseInt(rewardAmount || '0') * (1 - distributionRatio)),
         latitude: selectedLocation?.lat,
         longitude: selectedLocation?.lng,
         achievementName: achievementName || null,
-        post_limit: `${deadlineYear}-${deadlineMonth.padStart(2, '0')}-${deadlineDay.padStart(2, '0')}`
+        post_limit: `${deadlineYear}-${deadlineMonth.padStart(2, '0')}-${deadlineDay.padStart(2, '0')}T23:59:59.000Z`
       };
 
       // APIリクエスト送信
-      const response = await fetch('/api/posts', {
+      const response = await fetch('http://bomu.info:8000/posts', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -316,17 +350,22 @@ export default function PostModal({ isVisible, onClose, selectedLocation, user, 
                     タグ
                   </label>
                   <div className="grid grid-cols-2 gap-2">
-                    {['環境・エコ', 'テクノロジー', '教育・学習', 'コミュニティ'].map((tag) => (
+                    {[
+                      { id: "276643c6-4e69-4d62-a7ba-457125d20a4f", name: "福祉" },
+                      { id: "9a755098-dc5c-414d-92e3-f49c219589a1", name: "ゴミ" },
+                      { id: "9acd6e59-ecc6-4654-a3ca-61a0d646e1aa", name: "環境" },
+                      { id: "9f8bdc28-a28b-4647-b18f-56f8fafdbfca", name: "教育" }
+                    ].map((tag) => (
                       <button
-                        key={tag}
-                        onClick={() => setSelectedTag(selectedTag === tag ? null : tag)}
+                        key={tag.id}
+                        onClick={() => setSelectedTag(selectedTag === tag.id ? null : tag.id)}
                         className={`px-3 py-1 text-xs font-medium rounded-full border transition-colors ${
-                          selectedTag === tag
+                          selectedTag === tag.id
                             ? 'bg-blue-500 text-white border-blue-500'
                             : 'bg-gray-100 text-gray-700 border-gray-300 hover:bg-gray-200'
                         }`}
                       >
-                        {tag}
+                        {tag.name}
                       </button>
                     ))}
                   </div>
@@ -558,11 +597,13 @@ export default function PostModal({ isVisible, onClose, selectedLocation, user, 
                   <div className="flex justify-center">
                     <div className="flex flex-col items-center">
                       <button
-                        onClick={() => {
-                          // TODO: アチーブメント生成処理
-                          setAchievementName('環境保護アチーブメント');
-                        }}
-                        className="px-6 py-1 text-white text-sm font-semibold rounded-lg transition-colors hover:opacity-80"
+                        onClick={handleGenerateAchievement}
+                        disabled={!title.trim() || !description.trim()}
+                        className={`px-6 py-1 text-white text-sm font-semibold rounded-lg transition-colors ${
+                          title.trim() && description.trim() 
+                            ? 'hover:opacity-80' 
+                            : 'opacity-50 cursor-not-allowed'
+                        }`}
                         style={{ backgroundColor: '#7BB8FF' }}
                       >
                         生成
