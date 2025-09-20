@@ -4,6 +4,7 @@ export interface Tag {
 }
 
 export interface Comment {
+  id: string;
   name: string;
   context: string;
   comment_time: string;
@@ -11,7 +12,13 @@ export interface Comment {
   comment_good: number;
 }
 
+export interface Achievement {
+  id: string;
+  name: string;
+}
+
 export interface Post {
+  id: string;
   user_name: string;
   prefectures: string;
   lat: number;
@@ -25,13 +32,14 @@ export interface Post {
   direct_reward: number;
   post_time: string;
   post_limit: string;
-  achivement: string;
+  achivement: Achievement;
   post_good: number;
   comment: Comment[];
 }
 
 export const mockPosts: Post[] = [
   {
+    id: "post_001",
     user_name: "田中太郎",
     prefectures: "大阪府",
     lat: 34.7024854,
@@ -48,26 +56,32 @@ export const mockPosts: Post[] = [
     direct_reward: 100,
     post_time: "2025-09-19T10:30:00Z",
     post_limit: "2025-09-25T23:59:59Z",
-    achivement: "環境保護アチーブメント",
+    achivement: {
+      id: "ach_001",
+      name: "環境保護アチーブメント"
+    },
     post_good: 15,
     comment: [
       {
+        id: "comment_001",
         name: "田中太郎",
         context: "素晴らしい取り組みですね！参加したいです。",
         comment_time: "2025-09-19T11:00:00Z",
-        post_id: "post001",
+        post_id: "post_001",
         comment_good: 5
       },
       {
+        id: "comment_002",
         name: "佐藤花子",
         context: "日曜日なら参加できます。時間を教えてください。",
         comment_time: "2025-09-19T14:30:00Z",
-        post_id: "post001",
+        post_id: "post_001",
         comment_good: 3
       }
     ]
   },
   {
+    id: "post_002",
     user_name: "山田花子",
     prefectures: "京都府",
     lat: 34.7100000,
@@ -85,19 +99,24 @@ export const mockPosts: Post[] = [
     direct_reward: 150,
     post_time: "2025-09-18T15:20:00Z",
     post_limit: "2025-09-30T18:00:00Z",
-    achivement: "デジタル支援アチーブメント",
+    achivement: {
+      id: "ach_002",
+      name: "デジタル支援アチーブメント"
+    },
     post_good: 8,
     comment: [
       {
+        id: "comment_003",
         name: "山田次郎",
         context: "とても良い企画ですね。講師として協力できます。",
         comment_time: "2025-09-18T16:45:00Z",
-        post_id: "post002",
+        post_id: "post_002",
         comment_good: 4
       }
     ]
   },
   {
+    id: "post_003",
     user_name: "佐藤一郎",
     prefectures: "兵庫県",
     lat: 34.6950000,
@@ -115,28 +134,34 @@ export const mockPosts: Post[] = [
     direct_reward: 200,
     post_time: "2025-09-17T09:15:00Z",
     post_limit: "2025-10-15T20:00:00Z",
-    achivement: "地域安全アチーブメント",
+    achivement: {
+      id: "ach_003",
+      name: "地域安全アチーブメント"
+    },
     post_good: 22,
     comment: [
       {
+        id: "comment_004",
         name: "鈴木一郎",
         context: "防災士の資格を持っています。お手伝いします！",
         comment_time: "2025-09-17T10:30:00Z",
-        post_id: "post003",
+        post_id: "post_003",
         comment_good: 8
       },
       {
+        id: "comment_005",
         name: "高橋美咲",
         context: "子供向けの防災教育も含めていただけますか？",
         comment_time: "2025-09-17T13:20:00Z",
-        post_id: "post003",
+        post_id: "post_003",
         comment_good: 6
       },
       {
+        id: "comment_006",
         name: "渡辺健太",
         context: "会場の手配について相談があります。",
         comment_time: "2025-09-18T08:45:00Z",
-        post_id: "post003",
+        post_id: "post_003",
         comment_good: 2
       }
     ]

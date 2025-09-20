@@ -7,9 +7,10 @@ interface PostHoverPopupProps {
   isVisible: boolean;
   position: 'left' | 'right';
   mousePosition: { x: number; y: number };
+  onMouseLeave?: () => void;
 }
 
-export default function PostHoverPopup({ post, isVisible, position, mousePosition }: PostHoverPopupProps) {
+export default function PostHoverPopup({ post, isVisible, position, mousePosition, onMouseLeave }: PostHoverPopupProps) {
   const [formattedDate, setFormattedDate] = useState<string>('');
 
   useEffect(() => {
@@ -45,6 +46,15 @@ export default function PostHoverPopup({ post, isVisible, position, mousePositio
     <div 
       style={popupStyle}
       className="bg-white rounded-lg shadow-lg border border-gray-200 p-4 max-w-64 hover-popup"
+      onMouseEnter={() => {
+        console.log('ポップアップにマウス侵入:', post.title);
+      }}
+      onMouseLeave={() => {
+        console.log('ポップアップからマウス離脱:', post.title);
+        if (onMouseLeave) {
+          onMouseLeave();
+        }
+      }}
     >
       {/* タイトル */}
       <h3 className="font-semibold text-gray-900 text-base mb-3 leading-tight">
@@ -94,7 +104,7 @@ export default function PostHoverPopup({ post, isVisible, position, mousePositio
       {post.achivement && (
         <div className="mb-3">
           <div className="bg-purple-100 text-purple-600 px-2 py-1 rounded text-xs text-center">
-            {post.achivement}
+            {post.achivement.name}
           </div>
         </div>
       )}
