@@ -21,7 +21,9 @@ interface PostModalProps {
 export default function PostModal({ isVisible, onClose, selectedLocation, user }: PostModalProps) {
   const [showContent, setShowContent] = useState(false);
   const [showFrame, setShowFrame] = useState(false);
-  const [IconId, setIconId] = useState<string>('');
+  
+  const [title, setTitle] = useState<string>('');
+  const [IconURL, setIconURL] = useState<string>('');
   const [description, setDescription] = useState<string>('');
   const [selectedTag, setSelectedTag] = useState<string | null>(null);
   const [subTags, setSubTags] = useState<string[]>([]);
@@ -86,6 +88,7 @@ export default function PostModal({ isVisible, onClose, selectedLocation, user }
       //     'Content-Type': 'application/json',
       //   },
       //   body: JSON.stringify({
+      //     title,
       //     IconId,
       //     lat : selectedLocation?.lat,
       //     lng : selectedLocation?.lng,
@@ -146,20 +149,45 @@ export default function PostModal({ isVisible, onClose, selectedLocation, user }
                     <span className="text-2xl font-bold text-black">{user.token.toLocaleString()}t</span>
                   </div>
                   
-                  {/* 緯度経度表示 */}
-                  {selectedLocation && (
-                    <div className="text-base text-gray-800">
-                      <div>緯度: {selectedLocation.lat.toFixed(6)}</div>
-                      <div>経度: {selectedLocation.lng.toFixed(6)}</div>
-                    </div>
-                  )}
+                  {/* タイトル入力 */}
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      タイトル
+                    </label>
+                    <input
+                      type="text"
+                      value={title}
+                      onChange={(e) => setTitle(e.target.value)}
+                      placeholder="プロジェクトのタイトル"
+                      className="w-48 px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200"
+                      maxLength={50}
+                    />
+                  </div>
                 </div>
                 
                 {/* アイコンとボタン */}
                 <div className="flex gap-6 items-start">
                   {/* アイコン表示 */}
-                  <div className="w-28 h-28 bg-gray-200 rounded-full flex items-center justify-center">
-                    <User size={48} className="text-gray-500" />
+                  <div className="w-28 h-28 bg-gray-200 rounded-full flex items-center justify-center overflow-hidden">
+                    {IconURL ? (
+                      <img
+                        src={IconURL}
+                        alt="選択されたアイコン"
+                        className="w-full h-full object-cover"
+                        onError={(e) => {
+                          // 画像読み込みエラー時はデフォルトアイコンにフォールバック
+                          e.currentTarget.style.display = 'none';
+                          const parent = e.currentTarget.parentElement;
+                          if (parent) {
+                            const userIcon = parent.querySelector('.user-icon') as HTMLElement;
+                            if (userIcon) userIcon.style.display = 'flex';
+                          }
+                        }}
+                      />
+                    ) : null}
+                    <div className={`user-icon w-full h-full flex items-center justify-center ${IconURL ? 'hidden' : ''}`}>
+                      <User size={48} className="text-gray-500" />
+                    </div>
                   </div>
                   
                   {/* ボタン群 */}
@@ -182,6 +210,8 @@ export default function PostModal({ isVisible, onClose, selectedLocation, user }
                     概要
                   </label>
                   <textarea
+                    value={description}
+                    onChange={(e) => setDescription(e.target.value)}
                     placeholder="プロジェクトの概要を入力してください..."
                     className="w-full px-4 py-3 border border-gray-300 rounded-lg resize-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 placeholder-gray-400"
                     rows={6}
