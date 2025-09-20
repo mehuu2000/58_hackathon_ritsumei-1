@@ -1,0 +1,118 @@
+Auth API 仕様（プレーンテキスト）
+
+概要
+- 本APIはFastAPIで提供される認証系エンドポイント群です。
+- ベースパス: /auth
+- 環境変数: SUPABASE_URL, SUPABASE_ANON_KEY（Supabase連携に必要）
+- 文字コード: UTF-8
+
+共通
+- Content-Type: application/json
+- レスポンスのエラーフォーマット: {"detail": "..."}（FastAPI標準）
+- タイムゾーン: UTC（サーバ側）
+
+注意事項
+- パスワードはクライアント側で事前にハッシュ化した文字列をそのまま送信します。
+  Supabase標準は平文パスワードを想定しているため、運用設計に留意してください。
+- Supabaseクライアントは各エンドポイントで遅延インポートしています。
+
+============================================================
+1) サインアップ
+============================================================
+HTTP
+- Method: POST
+- Path: /auth/sign-up
+
+目的
+- 新規ユーザーの作成（メール + 事前ハッシュ済みパスワード）
+
+リクエストボディ（JSON）
+- email: string（RFC準拠のメールアドレス）
+- password_hash: string（事前ハッシュ済みのパスワード文字列）
+
+レスポンス（JSON）
+- access_token: string|null（セッションが作成された場合のみ）
+- refresh_token: string|null
+- user_id: string|null（作成に成功したユーザーID）
+- is_authenticated: boolean（セッションが有効か）
+
+ステータスコード
+- 200: 成功
+- 400: サインアップに失敗（既存メールなど）
+- 500: 内部エラー（環境変数未設定、依存関係の不整合など）
+
+例
+curl -X POST http://localhost:8000/auth/sign-up \
+  -H "Content-Type: application/json" \
+  -d '{"email":"new@example.com","password_hash":"hashNEW"}'
+
+============================================================
+2) ログイン
+============================================================
+HTTP
+- Method: POST
+- Path: /auth/login
+
+目的
+- 既存ユーザーのログイン（メール + 事前ハッシュ済みパスワード）
+
+リクエストボディ（JSON）
+- email: string
+- password_hash: string
+
+レスポンス（JSON）
+- access_token: string|null
+- refresh_token: string|null
+- user_id: string|null
+- is_authenticated: boolean（通常true）
+
+ステータスコード
+- 200: 成功
+- 401: 認証失敗（メールまたはパスワード不正）
+- 500: 内部エラー
+
+例
+curl -X POST http://localhost:8000/auth/login \
+  -H "Content-Type: application/json" \
+  -d '{"email":"user1@example.com","password_hash":"hash123"}'
+
+============================================================
+3) セッション判定
+============================================================
+HTTP
+- Method: GET
+- Path: /auth/session
+
+目的
+- アクセストークン（JWT）の有効性を判定する
+
+ヘッダー
+- Authorization: Bearer <access_token>
+
+レスポンス（JSON）
+- is_authenticated: boolean
+- user_id: string|null（認証済みならユーザーID）
+
+ステータスコード
+- 200: 常に200を返却し、is_authenticatedで状態を示す
+
+例
+curl -X GET http://localhost:8000/auth/session \
+  -H "Authorization: Bearer at_user1@example.com"
+
+============================================================
+エラーハンドリング方針（簡易）
+============================================================
+- 入力バリデーションエラー: 422（FastAPI標準）
+- 認証失敗: 401（/auth/login）
+- サインアップ失敗: 400
+- 上記以外の例外: 500
+
+============================================================
+運用・拡張メモ
+============================================================
+- レート制限: 現状なし（API Gateway/リバースプロキシ側で導入を推奨）
+- 監査ログ: アクセスログはアプリ/インフラ側で収集を想定
+- CORS: 必要に応じてFastAPIミドルウェアで許可設定
+- トークンリフレッシュ: 本仕様では未提供。必要に応じて追加検討。
+- Supabase連携: SUPABASE_URL, SUPABASE_ANON_KEY のSecret管理に注意
