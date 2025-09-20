@@ -1,0 +1,13 @@
+services:
+  app:
+    build:
+      context: ..
+      dockerfile: front_docker/Dockerfile
+    ports:
+      - "3000:3000"
+    volumes:
+      - ../front:/app
+      - /app/node_modules
+    environment:
+      - NODE_ENV=development
+    command: ["npm", "run", "dev", "--", "-p", "3000", "-H", "0.0.0.0"]
