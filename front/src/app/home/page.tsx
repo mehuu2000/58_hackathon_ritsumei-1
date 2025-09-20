@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import dynamic from 'next/dynamic';
 import WoodenNavigation from '@/components/WoodenNavigation';
 import NewsComponent from '@/components/NewsComponent';
@@ -31,16 +31,75 @@ export default function HomePage() {
   const [isPostMode, setIsPostMode] = useState(false);
   const [isPostModalVisible, setIsPostModalVisible] = useState(false);
   const [posts, setPosts] = useState<Post[]>(mockPosts);
-  
-  // ユーザーのモックデータ
-  const [user] = useState<User>({
-    uid: '12345678-1234-1234-1234-123456789abc',
-    display_name: '山田太郎',
-    token: 1250,
-    access_token: 'abcdefg1234567',
-    email: 'yamada@example.com',
-    created_at: '2025-01-15T10:30:00Z'
-  });
+  const [user, setUser] = useState<User | null>(null);
+  const [isLoadingUser, setIsLoadingUser] = useState(true);
+
+  // fetchAPIでユーザー情報を取得
+  useEffect(() => {
+    const fetchUserData = async () => {
+      try {
+        const accessToken = localStorage.getItem('access_token');
+        const userId = localStorage.getItem('user_id');
+        
+        if (!accessToken || !userId) {
+          // localStorageにトークンがない場合は認証ページにリダイレクト
+          window.location.href = '/';
+          return;
+        }
+
+        // ユーザー情報をAPIから取得
+        const response = await fetch(`http://bomu.info:8000/profile/${userId}`, {
+          method: 'GET',
+          headers: {
+            'Authorization': `Bearer ${accessToken}`,
+            'Content-Type': 'application/json'
+          }
+        });
+
+        if (response.ok) {
+          const userData = await response.json();
+          console.log('取得したユーザーデータ:', userData);
+          
+          const user: User = {
+            uid: userData.uid,
+            display_name: userData.display_name,
+            token: userData.token,
+            access_token: accessToken,
+            email: userData.email,
+            created_at: userData.created_at
+          };
+          
+          setUser(user);
+        } else {
+          console.error('ユーザー情報取得失敗:', response.statusText);
+          // 認証エラーの場合はログインページに戻す
+          if (response.status === 401) {
+            window.location.href = '/';
+          }
+        }
+      } catch (error) {
+        console.error('ユーザー情報取得エラー:', error);
+        window.location.href = '/';
+      } finally {
+        setIsLoadingUser(false);
+      }
+    };
+
+    fetchUserData();
+  }, []);
+
+  // ユーザー情報読み込み中またはユーザーが未認証の場合
+  if (isLoadingUser || !user) {
+    return (
+      <div className="flex items-center justify-center h-screen bg-gray-200">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500 mx-auto mb-4"></div>
+          <p className="text-gray-600">ユーザー情報を読み込み中...</p>
+        </div>
+      </div>
+    );
+  }
+
 
   const handleMapClick = (lat: number, lng: number) => {
     // 投稿モードの時のみ地点を設定
@@ -63,6 +122,11 @@ export default function HomePage() {
   // 新しい投稿を配列の先頭に追加する関数
   const handlePostSubmit = (newPost: Post) => {
     setPosts(prevPosts => [newPost, ...prevPosts]);
+  };
+
+  // ユーザーのトークン数を更新する関数
+  const handleUserTokenUpdate = (newTokenCount: number) => {
+    setUser(prevUser => prevUser ? { ...prevUser, token: newTokenCount } : null);
   };
 
   return (
@@ -102,6 +166,7 @@ export default function HomePage() {
         selectedLocation={clickedPoint}
         user={user}
         onPostSubmit={handlePostSubmit}
+        onUserTokenUpdate={handleUserTokenUpdate}
       />
     </main>
   );
