@@ -20,10 +20,12 @@ interface PostDetailModalProps {
   user: User;
 }
 
-export default function PostDetailModal({ post, isVisible, onClose, onAnimationComplete }: PostDetailModalProps) {
+export default function PostDetailModal({ post, isVisible, onClose, onAnimationComplete, user }: PostDetailModalProps) {
   const [showContent, setShowContent] = useState(false);
   const [showFrame, setShowFrame] = useState(false);
   const [isExpanded, setIsExpanded] = useState(false);
+  const [likedComments, setLikedComments] = useState<Set<string>>(new Set());
+  const [commentLikeCounts, setCommentLikeCounts] = useState<{[key: string]: number}>({});
 
   // デバッグログ
   useEffect(() => {
@@ -58,6 +60,55 @@ export default function PostDetailModal({ post, isVisible, onClose, onAnimationC
       return () => clearTimeout(timer);
     }
   }, [isVisible, post]);
+
+  // コメントのいいね状態を初期化
+  useEffect(() => {
+    if (post && post.comment) {
+      const initialCounts: {[key: string]: number} = {};
+      post.comment.forEach(comment => {
+        initialCounts[comment.id] = comment.comment_good;
+      });
+      setCommentLikeCounts(initialCounts);
+    }
+  }, [post]);
+
+  // いいね機能のAPI呼び出し
+  const handleLikeComment = async (commentId: string) => {
+    try {
+      const response = await fetch(`http://bomu.info:8000/reaction/comment/${commentId}`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${user.access_token}`
+        }
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        
+        // いいね状態を更新
+        setLikedComments(prev => {
+          const newSet = new Set(prev);
+          if (data.result_code) {
+            newSet.add(commentId);
+          } else {
+            newSet.delete(commentId);
+          }
+          return newSet;
+        });
+
+        // いいね数を更新
+        setCommentLikeCounts(prev => ({
+          ...prev,
+          [commentId]: parseInt(data.current_like_count)
+        }));
+      } else {
+        console.error('いいね処理失敗:', response.statusText);
+      }
+    } catch (error) {
+      console.error('いいね処理エラー:', error);
+    }
+  };
 
   if (!showFrame) return null;
 
@@ -137,10 +188,18 @@ export default function PostDetailModal({ post, isVisible, onClose, onAnimationC
                                   
                                   {/* いいねボタンと日時 */}
                                   <div className="flex items-center justify-between">
-                                    <div className="flex items-center space-x-1 text-gray-500">
-                                      <Heart size={16} className="text-red-400" />
-                                      <span className="text-sm">{comment.comment_good}</span>
-                                    </div>
+                                    <button 
+                                      onClick={() => handleLikeComment(comment.id)}
+                                      className="flex items-center space-x-1 text-gray-500 hover:text-red-500 transition-colors"
+                                    >
+                                      <Heart 
+                                        size={16} 
+                                        className={`${likedComments.has(comment.id) ? 'text-red-500 fill-red-500' : 'text-red-400'} transition-colors`} 
+                                      />
+                                      <span className="text-sm">
+                                        {commentLikeCounts[comment.id] !== undefined ? commentLikeCounts[comment.id] : comment.comment_good}
+                                      </span>
+                                    </button>
                                     <span className="text-xs text-gray-400">
                                       {formattedDate}
                                     </span>

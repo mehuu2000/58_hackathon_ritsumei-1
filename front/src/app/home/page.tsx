@@ -73,6 +73,7 @@ export default function HomePage() {
           onMapClick={handleMapClick}
           posts={posts}
           isPostMode={isPostMode}
+          user={user}
         />
       </div>
       

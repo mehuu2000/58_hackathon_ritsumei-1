@@ -10,14 +10,30 @@ const MapContainer = dynamic(() => import('@/components/MapContainer'), {
   loading: () => <div className="flex items-center justify-center h-screen bg-gray-200">Loading map...</div>
 });
 
+interface User {
+  uid: string;
+  display_name?: string;
+  access_token: string;
+  email: string;
+  created_at: string;
+}
+
 export default function TopPage() {
+  // ユーザーのモックデータ
+  const [user] = useState<User>({
+    uid: '12345678-1234-1234-1234-123456789abc',
+    display_name: '山田太郎',
+    access_token: 'abcdefg1234567',
+    email: 'yamada@example.com',
+    created_at: '2025-01-15T10:30:00Z'
+  });
 
   return (
     <main className="relative h-screen w-screen overflow-hidden">
       <>
         {/* 背景地図 */}
         <div className="fixed inset-0 z-0">
-          <MapContainer interactive={false} />
+          <MapContainer interactive={false} user={user} />
         </div>
         
         {/* アプリ名 */}

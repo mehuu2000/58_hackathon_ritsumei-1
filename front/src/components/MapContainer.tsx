@@ -9,12 +9,21 @@ import { Post } from '@/data/mockPosts';
 import PostHoverPopup from './PostHoverPopup';
 import PostDetailModal from './PostDetailModal';
 
+interface User {
+  uid: string;
+  display_name?: string;
+  access_token: string;
+  email: string;
+  created_at: string;
+}
+
 interface MapContainerProps {
   interactive?: boolean;
   clickedPoint?: { lat: number; lng: number } | null;
   onMapClick?: (lat: number, lng: number) => void;
   posts?: Post[];
   isPostMode?: boolean;
+  user: User;
 }
 
 const TOKYO_POSITION: [number, number] = [35.6812, 139.7671]; // 東京駅
@@ -212,7 +221,7 @@ function PostDetailViewController({
   return null;
 }
 
-export default function MapContainer({ interactive = true, clickedPoint, onMapClick, posts = [], isPostMode = false }: MapContainerProps) {
+export default function MapContainer({ interactive = true, clickedPoint, onMapClick, posts = [], isPostMode = false, user }: MapContainerProps) {
   console.log('MapContainer props:', { postsCount: posts.length, isPostMode, interactive });
   
   const [position, setPosition] = useState<[number, number]>(TOKYO_POSITION);
@@ -472,6 +481,7 @@ export default function MapContainer({ interactive = true, clickedPoint, onMapCl
         isVisible={isDetailModalVisible}
         onClose={handleCloseModal}
         onAnimationComplete={handleAnimationComplete}
+        user={user}
       />
     </div>
   );
