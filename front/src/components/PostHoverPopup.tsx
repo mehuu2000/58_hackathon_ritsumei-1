@@ -45,6 +45,12 @@ export default function PostHoverPopup({ post, isVisible, position, mousePositio
     <div 
       style={popupStyle}
       className="bg-white rounded-lg shadow-lg border border-gray-200 p-4 max-w-64 hover-popup"
+      onMouseEnter={() => {
+        console.log('ポップアップにマウス侵入:', post.title);
+      }}
+      onMouseLeave={() => {
+        console.log('ポップアップからマウス離脱:', post.title);
+      }}
     >
       {/* タイトル */}
       <h3 className="font-semibold text-gray-900 text-base mb-3 leading-tight">

@@ -7,6 +7,7 @@ import { renderToString } from 'react-dom/server';
 import { MapPin } from 'phosphor-react';
 import { Post } from '@/data/mockPosts';
 import PostHoverPopup from './PostHoverPopup';
+import PostDetailModal from './PostDetailModal';
 
 interface MapContainerProps {
   interactive?: boolean;
@@ -58,61 +59,23 @@ const createPostIcon = (post: Post, isPostMode: boolean = false) => {
     return title.substring(0, maxLength - 3) + '...';
   };
 
-  const iconHtml = renderToString(
-    <div style={{ position: 'relative', display: 'flex', flexDirection: 'column', alignItems: 'center', pointerEvents: isPostMode ? 'none' : 'auto' }}>
-      <div style={{
-        background: 'white',
-        padding: '4px 8px',
-        borderRadius: '4px',
-        boxShadow: '0 2px 4px rgba(0,0,0,0.2)',
-        fontSize: '9px',
-        marginBottom: '4px',
-        textAlign: 'center',
-        width: '100px',
-        fontWeight: '500',
-        lineHeight: '1.2',
-        height: '24px',
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        wordWrap: 'break-word',
-        overflow: 'hidden',
-        pointerEvents: isPostMode ? 'none' : 'auto'
-      }}>
-        {truncateTitle(post.title)}
+  const iconHtml = `
+    <div class="custom-icon-wrapper">
+      <div class="custom-icon-title">
+        ${truncateTitle(post.title)}
       </div>
-      <div style={{ 
-        width: '36px',
-        height: '36px',
-        borderRadius: '50%',
-        overflow: 'hidden',
-        filter: 'drop-shadow(0 1px 2px rgba(0,0,0,0.1))',
-        pointerEvents: isPostMode ? 'none' : 'auto'
-      }}>
+      <div class="custom-icon-image">
         <img 
-          src={post.IconURL} 
-          alt={post.title}
-          style={{
-            width: '100%',
-            height: '100%',
-            objectFit: 'cover'
-          }}
-          onError={(e) => {
-            // 画像読み込みエラー時のフォールバック
-            e.currentTarget.style.display = 'none';
-            e.currentTarget.parentElement!.innerHTML = '📍';
-            e.currentTarget.parentElement!.style.display = 'flex';
-            e.currentTarget.parentElement!.style.alignItems = 'center';
-            e.currentTarget.parentElement!.style.justifyContent = 'center';
-            e.currentTarget.parentElement!.style.fontSize = '24px';
-          }}
+          src="${post.IconURL}" 
+          alt="${post.title}"
+          onerror="this.style.display='none'; this.parentElement.innerHTML='📍'; this.parentElement.style.display='flex'; this.parentElement.style.alignItems='center'; this.parentElement.style.justifyContent='center'; this.parentElement.style.fontSize='24px';"
         />
       </div>
     </div>
-  );
+  `;
 
   return L.divIcon({
-    className: 'custom-post-icon',
+    className: isPostMode ? 'post-mode-disabled' : 'post-mode-enabled',
     html: iconHtml,
     iconSize: [120, 80],
     iconAnchor: [60, 80],
@@ -169,15 +132,80 @@ function MapViewController({ clickedPoint }: { clickedPoint: { lat: number; lng:
   return null;
 }
 
+// 投稿詳細表示時の地図移動を制御するコンポーネント
+function PostDetailViewController({ selectedPost }: { selectedPost: Post | null }) {
+  const map = useMap();
+
+  useEffect(() => {
+    if (!selectedPost || !map) return;
+
+    // 画面サイズを取得
+    const container = map.getContainer();
+    const containerWidth = container.offsetWidth;
+    const containerHeight = container.offsetHeight;
+    
+    // 横軸3/4、縦軸1/2の位置に投稿を表示するため地図中心を計算
+    const targetScreenX = containerWidth * 3 / 4;
+    const targetScreenY = containerHeight / 2;
+    const centerScreenX = containerWidth / 2;
+    const centerScreenY = containerHeight / 2;
+    
+    // オフセット計算
+    const offsetPixelsX = centerScreenX - targetScreenX;
+    const offsetPixelsY = centerScreenY - targetScreenY;
+    
+    // ピクセルオフセットを緯度経度オフセットに変換
+    const currentCenter = map.getCenter();
+    const currentZoom = map.getZoom();
+    
+    // 東西方向（経度）のオフセットを計算
+    const metersPerPixelX = 40075016.686 * Math.cos(currentCenter.lat * Math.PI / 180) / Math.pow(2, currentZoom + 8);
+    const offsetMetersX = offsetPixelsX * metersPerPixelX;
+    const offsetLng = offsetMetersX / (111320 * Math.cos(currentCenter.lat * Math.PI / 180));
+    
+    // 南北方向（緯度）のオフセットを計算
+    const metersPerPixelY = 40075016.686 / Math.pow(2, currentZoom + 8);
+    const offsetMetersY = offsetPixelsY * metersPerPixelY;
+    const offsetLat = offsetMetersY / 111320;
+    
+    // 新しい中心位置を計算
+    const newCenter: [number, number] = [
+      selectedPost.lat + offsetLat, 
+      selectedPost.lng + offsetLng
+    ];
+    
+    // スムーズに移動
+    map.flyTo(newCenter, currentZoom, {
+      duration: 1.0, // 1秒でアニメーション
+    });
+
+  }, [selectedPost, map]);
+
+  return null;
+}
+
 export default function MapContainer({ interactive = true, clickedPoint, onMapClick, posts = [], isPostMode = false }: MapContainerProps) {
+  console.log('MapContainer props:', { postsCount: posts.length, isPostMode, interactive });
+  
   const [position, setPosition] = useState<[number, number]>(TOKYO_POSITION);
   const [isLoading, setIsLoading] = useState(true);
   const [hoveredPost, setHoveredPost] = useState<Post | null>(null);
   const [mousePosition, setMousePosition] = useState<{ x: number; y: number }>({ x: 0, y: 0 });
   const [popupPosition, setPopupPosition] = useState<'left' | 'right'>('right');
+  const [selectedPost, setSelectedPost] = useState<Post | null>(null);
+  const [isDetailModalVisible, setIsDetailModalVisible] = useState(false);
   const hoverTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
-  // グローバルマウス監視で確実にクリア
+  // デバッグ用: 状態変化を監視
+  useEffect(() => {
+    console.log('selectedPost変更:', selectedPost?.title || 'null');
+  }, [selectedPost]);
+
+  useEffect(() => {
+    console.log('isDetailModalVisible変更:', isDetailModalVisible);
+  }, [isDetailModalVisible]);
+
+  // グローバルマウス監視で確実にクリア（ディレイ付き）
   useEffect(() => {
     const handleGlobalMouseMove = (e: MouseEvent) => {
       if (!hoveredPost) return;
@@ -185,14 +213,24 @@ export default function MapContainer({ interactive = true, clickedPoint, onMapCl
       // ポップアップとアイコンの領域外をチェック
       const target = e.target as HTMLElement;
       const isOverPopup = target.closest('.hover-popup');
-      const isOverIcon = target.closest('.custom-post-icon');
+      const isOverIcon = target.closest('.custom-icon-wrapper') || 
+                         target.closest('.leaflet-marker-icon') ||
+                         target.closest('.post-mode-enabled');
       
       if (!isOverPopup && !isOverIcon) {
-        // 領域外なら即座に非表示
+        // 領域外なら300ms後に非表示（誤動作防止のためディレイ）
         if (hoverTimeoutRef.current) {
           clearTimeout(hoverTimeoutRef.current);
         }
-        setHoveredPost(null);
+        hoverTimeoutRef.current = setTimeout(() => {
+          setHoveredPost(null);
+        }, 300);
+      } else {
+        // 領域内にいる場合はタイマーをクリア
+        if (hoverTimeoutRef.current) {
+          clearTimeout(hoverTimeoutRef.current);
+          hoverTimeoutRef.current = null;
+        }
       }
     };
 
@@ -243,6 +281,34 @@ export default function MapContainer({ interactive = true, clickedPoint, onMapCl
     console.log('地図がクリックされました:', lat, lng);
   };
 
+  // 投稿クリック時の処理
+  const handlePostClick = (post: Post) => {
+    console.log('=== handlePostClick実行開始 ===');
+    console.log('投稿:', post.title);
+    console.log('isPostMode:', isPostMode);
+    
+    if (isPostMode) {
+      console.log('投稿モードのため処理をスキップ');
+      return;
+    }
+    
+    console.log('ホバーポップアップを非表示に設定');
+    setHoveredPost(null);
+    
+    console.log('モーダル表示設定開始');
+    setSelectedPost(post);
+    setIsDetailModalVisible(true);
+    console.log('selectedPost設定:', post.title);
+    console.log('isDetailModalVisible設定: true');
+    console.log('=== handlePostClick実行完了 ===');
+  };
+
+  // モーダルを閉じる処理
+  const handleCloseModal = () => {
+    setIsDetailModalVisible(false);
+    setSelectedPost(null);
+  };
+
 
   if (isLoading) {
     return (
@@ -278,35 +344,75 @@ export default function MapContainer({ interactive = true, clickedPoint, onMapCl
         {/* 地図の中心移動制御 */}
         <MapViewController clickedPoint={clickedPoint || null} />
         
-        {/* 投稿のマーカー表示 */}
-        {posts.map((post, index) => (
-          <Marker
-            key={index}
-            position={[post.lat, post.lng]}
-            icon={createPostIcon(post, isPostMode)}
-            eventHandlers={!isPostMode ? {
-              click: () => {
-                console.log('投稿がクリックされました:', post.title);
-              },
-              mouseover: (e) => {
-                // アイコンの中心位置を取得
-                const marker = e.target;
-                const map = marker._map;
-                const latLng = marker.getLatLng();
-                const point = map.latLngToContainerPoint(latLng);
-                
-                const centerX = window.innerWidth / 2;
-                const iconCenterX = point.x;
-                
-                // 即座に表示
-                setHoveredPost(post);
-                setMousePosition({ x: iconCenterX, y: point.y });
-                setPopupPosition(iconCenterX < centerX ? 'left' : 'right');
-              }
-            } : {}}
-          />
-        ))}
+        {/* 投稿詳細表示時の地図移動制御 */}
+        <PostDetailViewController selectedPost={selectedPost} />
         
+        {/* 投稿のマーカー表示 */}
+        {posts.map((post, index) => {
+          console.log('マーカー描画:', post.title, 'isPostMode:', isPostMode);
+          
+          const markerEventHandlers = isPostMode ? {} : {
+            click: (e: any) => {
+              console.log('=== クリックイベント発火 ===');
+              console.log('投稿:', post.title);
+              console.log('isPostMode:', isPostMode);
+              handlePostClick(post);
+            },
+            mouseover: (e: any) => {
+              if (isPostMode) return;
+              
+              console.log('ホバーイベント発火:', post.title);
+              
+              // 既存のタイマーをクリア
+              if (hoverTimeoutRef.current) {
+                clearTimeout(hoverTimeoutRef.current);
+                hoverTimeoutRef.current = null;
+              }
+              
+              // アイコンの中心位置を取得
+              const marker = e.target;
+              const map = marker._map;
+              const latLng = marker.getLatLng();
+              const point = map.latLngToContainerPoint(latLng);
+              
+              const centerX = window.innerWidth / 2;
+              const iconCenterX = point.x;
+              
+              // 即座に表示
+              setHoveredPost(post);
+              setMousePosition({ x: iconCenterX, y: point.y });
+              setPopupPosition(iconCenterX < centerX ? 'left' : 'right');
+            },
+            mouseout: (e: any) => {
+              if (isPostMode) return;
+              
+              console.log('マウスアウトイベント:', post.title);
+              
+              // 500ms後に非表示（ポップアップへのマウス移動時間を確保）
+              if (hoverTimeoutRef.current) {
+                clearTimeout(hoverTimeoutRef.current);
+              }
+              hoverTimeoutRef.current = setTimeout(() => {
+                // ポップアップにマウスが移動していない場合のみ非表示
+                const popup = document.querySelector('.hover-popup:hover');
+                if (!popup) {
+                  setHoveredPost(null);
+                }
+              }, 500);
+            }
+          };
+          
+          return (
+            <Marker
+              key={`post-${post.title}-${index}`}
+              position={[post.lat, post.lng]}
+              icon={createPostIcon(post, isPostMode)}
+              eventHandlers={markerEventHandlers}
+            />
+          );
+        })}
+        
+
         {/* クリックされた地点のマーカー表示 */}
         {clickedPoint && (
           <Marker
@@ -317,7 +423,7 @@ export default function MapContainer({ interactive = true, clickedPoint, onMapCl
       </LeafletMapContainer>
 
       {/* ホバーポップアップ */}
-      {hoveredPost && (
+      {hoveredPost && !isDetailModalVisible && (
         <PostHoverPopup
           post={hoveredPost}
           isVisible={true}
@@ -325,6 +431,13 @@ export default function MapContainer({ interactive = true, clickedPoint, onMapCl
           mousePosition={mousePosition}
         />
       )}
+
+      {/* 投稿詳細モーダル */}
+      <PostDetailModal
+        post={selectedPost}
+        isVisible={isDetailModalVisible}
+        onClose={handleCloseModal}
+      />
     </div>
   );
 }
