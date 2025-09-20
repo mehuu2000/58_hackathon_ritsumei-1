@@ -303,6 +303,7 @@ export default function HomePage() {
         user={user}
         onPostSubmit={handlePostSubmit}
         onUserTokenUpdate={handleUserTokenUpdate}
+        posts={posts}
       />
     </main>
   );
