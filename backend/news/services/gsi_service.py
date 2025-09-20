@@ -11,6 +11,15 @@ async def get_prefecture_from_coords(lat: float, lon: float) -> str | None:
         
         try:
             response = await client.get(gsi_api_url)
+            print(f"Response Status Code: {response.status_code}")
+            try:
+                # レスポンスがJSON形式であれば、整形して表示
+                print(f"Response Body: {json.dumps(response.json(), indent=2, ensure_ascii=False)}")
+            except json.JSONDecodeError:
+                # JSONでなければそのまま表示
+                print(f"Response Body (not JSON): {response.text}")
+            print("-------------------------")
+            
             response.raise_for_status()
             data = response.json()
             
