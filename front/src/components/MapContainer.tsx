@@ -148,7 +148,7 @@ function PostDetailViewController({
 
     // モーダルが開かれた時の処理
     if (selectedPost && isDetailModalVisible && !originalPostPosition) {
-      console.log('モーダル開く: アイコンを3/4位置に移動');
+      console.log('モーダル開く: アイコンを1/4位置に移動');
       
       // 元の位置を保存
       setOriginalPostPosition({ lat: selectedPost.lat, lng: selectedPost.lng });
@@ -158,8 +158,8 @@ function PostDetailViewController({
       const containerWidth = container.offsetWidth;
       const containerHeight = container.offsetHeight;
       
-      // 横軸3/4、縦軸1/2の位置に投稿を表示するため地図中心を計算
-      const targetScreenX = containerWidth * 3 / 4;
+      // 横軸1/4、縦軸1/2の位置に投稿を表示するため地図中心を計算
+      const targetScreenX = containerWidth / 4;
       const targetScreenY = containerHeight / 2;
       const centerScreenX = containerWidth / 2;
       const centerScreenY = containerHeight / 2;

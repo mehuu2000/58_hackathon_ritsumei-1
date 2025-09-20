@@ -42,8 +42,8 @@ interface Post {
     post_id: string;
     comment_good: number;
   }>;
+  best_answer_id?: string;
 }
-
 interface PostModalProps {
   isVisible: boolean;
   onClose: () => void;
