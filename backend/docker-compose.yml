@@ -13,3 +13,5 @@ services:
       interval: 30s
       timeout: 10s
       retries: 5
+    dns:
+      - 8.8.8.8
