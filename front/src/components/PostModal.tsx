@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect, useRef } from 'react';
-import { X, User, Plus, Image, Upload, ArrowRight } from 'phosphor-react';
+import { X, User, Plus, Image, Upload, ArrowRight, Calendar } from 'phosphor-react';
 
 interface User {
   uid: string;
@@ -11,14 +11,48 @@ interface User {
   created_at: string;
 }
 
+interface Post {
+  id: string;
+  user_name?: string;
+  prefectures: string;
+  lat: number;
+  lng: number;
+  title: string;
+  IconURL: string;
+  ImageURL?: string;
+  discription: string;
+  tag_list: Array<{
+    name: string;
+    attribute: boolean;
+  }>;
+  distribution_reward: number;
+  direct_reward: number;
+  post_time: string;
+  post_limit: string;
+  achivement?: {
+    id: string;
+    name: string;
+  };
+  post_good: number;
+  comment: Array<{
+    id: string;
+    name?: string;
+    context: string;
+    comment_time: string;
+    post_id: string;
+    comment_good: number;
+  }>;
+}
+
 interface PostModalProps {
   isVisible: boolean;
   onClose: () => void;
   selectedLocation?: { lat: number; lng: number } | null;
   user: User;
+  onPostSubmit: (newPost: Post) => void;
 }
 
-export default function PostModal({ isVisible, onClose, selectedLocation, user }: PostModalProps) {
+export default function PostModal({ isVisible, onClose, selectedLocation, user, onPostSubmit }: PostModalProps) {
   const [showContent, setShowContent] = useState(false);
   const [showFrame, setShowFrame] = useState(false);
   
@@ -33,6 +67,22 @@ export default function PostModal({ isVisible, onClose, selectedLocation, user }
   const [rewardAmount, setRewardAmount] = useState('');
   const [distributionRatio, setDistributionRatio] = useState(0.5); // 0=解決者100%, 1=貢献者100%
   const [achievementName, setAchievementName] = useState<string>('');
+  // デフォルトの期限を現在から一週間後に設定
+  const getDefaultDeadline = () => {
+    const oneWeekLater = new Date();
+    oneWeekLater.setDate(oneWeekLater.getDate() + 7);
+    return {
+      year: oneWeekLater.getFullYear().toString(),
+      month: (oneWeekLater.getMonth() + 1).toString(),
+      day: oneWeekLater.getDate().toString()
+    };
+  };
+  
+  const defaultDeadline = getDefaultDeadline();
+  const [deadlineYear, setDeadlineYear] = useState<string>(defaultDeadline.year);
+  const [deadlineMonth, setDeadlineMonth] = useState<string>(defaultDeadline.month);
+  const [deadlineDay, setDeadlineDay] = useState<string>(defaultDeadline.day);
+  const [showCalendar, setShowCalendar] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   // アニメーション制御
@@ -78,38 +128,63 @@ export default function PostModal({ isVisible, onClose, selectedLocation, user }
     return { solverAmount, contributorAmount };
   };
 
+  // 入力値の妥当性チェックと修正
+  const validateAndFixInput = (value: string, type: 'year' | 'month' | 'day') => {
+    const num = parseInt(value);
+    if (isNaN(num)) return '';
+    
+    switch (type) {
+      case 'year':
+        const currentYear = new Date().getFullYear();
+        return Math.max(currentYear, Math.min(2099, num)).toString();
+      case 'month':
+        return Math.max(1, Math.min(12, num)).toString();
+      case 'day':
+        const year = parseInt(deadlineYear);
+        const month = parseInt(deadlineMonth);
+        const daysInMonth = new Date(year, month, 0).getDate();
+        return Math.max(1, Math.min(daysInMonth, num)).toString();
+      default:
+        return value;
+    }
+  };
+
   // 投稿処理
   const handlePost = async () => {
     try {
-      // TODO: 実際のAPIエンドポイントに変更
-      // const response = await fetch('/api/posts', {
-      //   method: 'POST',
-      //   headers: {
-      //     'Content-Type': 'application/json',
-      //   },
-      //   body: JSON.stringify({
-      //     title,
-      //     IconId,
-      //     lat : selectedLocation?.lat,
-      //     lng : selectedLocation?.lng,
-      //     description,
-      //     selectedTag,
-      //     subTags,
-      //     selectedImage,
-      //     rewardAmount,
-      //     distributionRatio,
-      //     achievementName,
-      //   }),
-      // });
+      const postData = {
+        title,
+        IconURL: IconURL || null,
+        detail: description,
+        selectTag: selectedTag || '',
+        subTags: subTags.length > 0 ? subTags : null,
+        selectedImage: selectedImage || null,
+        distribution_reward: Math.round(parseInt(rewardAmount || '0') * distributionRatio),
+        direct_reward: Math.round(parseInt(rewardAmount || '0') * (1 - distributionRatio)),
+        latitude: selectedLocation?.lat.toString() || '',
+        longitude: selectedLocation?.lng.toString() || '',
+        achievementName: achievementName || null,
+        post_limit: `${deadlineYear}-${deadlineMonth.padStart(2, '0')}-${deadlineDay.padStart(2, '0')}`
+      };
 
-      // if (response.ok) {
-      //   console.log('投稿成功');
-      //   onClose();
-      // } else {
-      //   console.error('投稿失敗:', response.statusText);
-      // }
-      console.log('投稿処理');
-      onClose();
+      // APIリクエスト送信
+      const response = await fetch('/api/posts', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${localStorage.getItem('access_token')}`
+        },
+        body: JSON.stringify(postData)
+      });
+
+      if (response.ok) {
+        const newPost: Post = await response.json();
+        onPostSubmit(newPost);
+        console.log('投稿成功');
+        onClose();
+      } else {
+        console.error('投稿失敗:', response.statusText);
+      }
     } catch (error) {
       console.error('投稿エラー:', error);
     }
@@ -486,16 +561,95 @@ export default function PostModal({ isVisible, onClose, selectedLocation, user }
                   </div>
                 </div>
                 
-                {/* 投稿ボタン */}
-                <div className="absolute bottom-0 right-0">
-                  <button
-                    onClick={handlePost}
-                    className="px-8 py-2 text-white text-base font-semibold rounded-lg transition-colors hover:opacity-80"
-                    style={{ backgroundColor: '#7BB8FF' }}
-                  >
-                    投稿
-                  </button>
+                {/* 期限設定と投稿ボタン */}
+                <div className="absolute bottom-0 right-0 flex items-center gap-4">
+                  {/* 期限設定 */}
+                  <div className="relative">
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      期限
+                    </label>
+                    <div className="flex items-center gap-2">
+                      <div className="flex items-center gap-1 px-3 py-2 border border-gray-300 rounded-lg bg-white">
+                        <input
+                          type="number"
+                          value={deadlineYear}
+                          onChange={(e) => setDeadlineYear(e.target.value)}
+                          onBlur={(e) => setDeadlineYear(validateAndFixInput(e.target.value, 'year'))}
+                          className="w-12 text-center text-sm bg-transparent outline-none"
+                          min="2025"
+                          max="2099"
+                        />
+                        <span className="text-sm text-gray-600">年</span>
+                        <input
+                          type="number"
+                          value={deadlineMonth}
+                          onChange={(e) => setDeadlineMonth(e.target.value)}
+                          onBlur={(e) => setDeadlineMonth(validateAndFixInput(e.target.value, 'month'))}
+                          className="w-8 text-center text-sm bg-transparent outline-none"
+                          min="1"
+                          max="12"
+                        />
+                        <span className="text-sm text-gray-600">月</span>
+                        <input
+                          type="number"
+                          value={deadlineDay}
+                          onChange={(e) => setDeadlineDay(e.target.value)}
+                          onBlur={(e) => setDeadlineDay(validateAndFixInput(e.target.value, 'day'))}
+                          className="w-8 text-center text-sm bg-transparent outline-none"
+                          min="1"
+                          max="31"
+                        />
+                        <span className="text-sm text-gray-600">日</span>
+                      </div>
+                      <button
+                        onClick={() => setShowCalendar(!showCalendar)}
+                        className="p-2 text-gray-600 hover:text-blue-500 transition-colors"
+                      >
+                        <Calendar size={20} />
+                      </button>
+                    </div>
+                  </div>
+                  
+                  {/* 投稿ボタン */}
+                  <div>
+                    <button
+                      onClick={handlePost}
+                      className="px-8 py-2 text-white text-base font-semibold rounded-lg transition-colors hover:opacity-80 mt-6"
+                      style={{ backgroundColor: '#7BB8FF' }}
+                    >
+                      投稿
+                    </button>
+                  </div>
                 </div>
+                
+                {/* カレンダーポップアップ */}
+                {showCalendar && (
+                  <div className="fixed inset-0 z-[800] flex items-center justify-center bg-black bg-opacity-50">
+                    <div className="bg-white rounded-lg shadow-xl p-6 max-w-sm w-full mx-4">
+                      <div className="flex justify-between items-center mb-4">
+                        <h3 className="text-lg font-semibold text-gray-800">期限を選択</h3>
+                        <button
+                          onClick={() => setShowCalendar(false)}
+                          className="text-gray-500 hover:text-gray-700"
+                        >
+                          <X size={20} />
+                        </button>
+                      </div>
+                      <input
+                        type="date"
+                        onChange={(e) => {
+                          const selectedDate = new Date(e.target.value);
+                          setDeadlineYear(selectedDate.getFullYear().toString());
+                          setDeadlineMonth((selectedDate.getMonth() + 1).toString());
+                          setDeadlineDay(selectedDate.getDate().toString());
+                          setShowCalendar(false);
+                        }}
+                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                        min={new Date().toISOString().split('T')[0]}
+                      />
+                    </div>
+                  </div>
+                )}
               </div>
             </div>
           )}

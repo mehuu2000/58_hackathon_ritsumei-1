@@ -5,7 +5,7 @@ export interface Tag {
 
 export interface Comment {
   id: string;
-  name: string;
+  name?: string;
   context: string;
   comment_time: string;
   post_id: string;
@@ -19,7 +19,7 @@ export interface Achievement {
 
 export interface Post {
   id: string;
-  user_name: string;
+  user_name?: string;
   prefectures: string;
   lat: number;
   lng: number;
@@ -27,14 +27,27 @@ export interface Post {
   IconURL: string;
   ImageURL?: string;
   discription: string;
-  tag_list: Tag[];
+  tag_list: Array<{
+    name: string;
+    attribute: boolean;
+  }>;
   distribution_reward: number;
   direct_reward: number;
   post_time: string;
   post_limit: string;
-  achivement: Achievement;
+  achivement?: {
+    id: string;
+    name: string;
+  };
   post_good: number;
-  comment: Comment[];
+  comment: Array<{
+    id: string;
+    name?: string;
+    context: string;
+    comment_time: string;
+    post_id: string;
+    comment_good: number;
+  }>;
 }
 
 export const mockPosts: Post[] = [
