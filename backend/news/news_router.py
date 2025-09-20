@@ -1,3 +1,4 @@
+print("★★★★★ news_router.py is being loaded! ★★★★★")
 import os
 import httpx
 from fastapi import APIRouter, HTTPException
