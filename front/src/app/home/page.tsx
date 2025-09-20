@@ -242,13 +242,25 @@ export default function HomePage() {
 
   // コメント追加機能
   const handleCommentAdd = (postId: string, newComment: any) => {
-    setPosts(prevPosts => 
-      prevPosts.map(post => 
-        post.id === postId 
-          ? { ...post, comment: [newComment, ...post.comment] }
-          : post
-      )
-    );
+    console.log('=== handleCommentAdd 呼び出し ===');
+    console.log('postId:', postId);
+    console.log('newComment:', newComment);
+    console.log('現在のposts配列:', posts);
+    
+    setPosts(prevPosts => {
+      console.log('prevPosts:', prevPosts);
+      const updatedPosts = prevPosts.map(post => {
+        if (post.id === postId) {
+          console.log('マッチした投稿を更新:', post.title);
+          const updatedPost = { ...post, comment: [newComment, ...post.comment] };
+          console.log('更新後の投稿:', updatedPost);
+          return updatedPost;
+        }
+        return post;
+      });
+      console.log('更新後のposts配列:', updatedPosts);
+      return updatedPosts;
+    });
   };
 
   return (

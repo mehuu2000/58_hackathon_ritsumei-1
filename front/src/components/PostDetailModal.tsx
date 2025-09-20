@@ -151,8 +151,8 @@ export default function PostDetailModal({ post, isVisible, onClose, onAnimationC
     if (!newComment.trim() || !post) return;
     
     const requestData = {
-      post_id: String(post.id),
-      context: newComment.trim()
+      post_id: post.id,
+      context: newComment
     };
     
     console.log('=== コメント送信デバッグ情報 ===');
@@ -185,8 +185,16 @@ export default function PostDetailModal({ post, isVisible, onClose, onAnimationC
         console.log('コメント作成成功:', newCommentData);
         
         // 親コンポーネントにコメント追加を通知
+        console.log('onCommentAdd関数の存在確認:', typeof onCommentAdd);
+        console.log('post.id:', post.id);
+        console.log('newCommentData:', newCommentData);
+        
         if (onCommentAdd) {
+          console.log('onCommentAddを呼び出し中...');
           onCommentAdd(post.id, newCommentData);
+          console.log('onCommentAdd呼び出し完了');
+        } else {
+          console.error('onCommentAdd関数が存在しません');
         }
         
         setNewComment('');
