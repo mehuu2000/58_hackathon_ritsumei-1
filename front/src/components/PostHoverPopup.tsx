@@ -38,13 +38,13 @@ export default function PostHoverPopup({ post, isVisible, position, mousePositio
       ? mousePosition.x + 60  // アイコン右側に60px離れて表示
       : window.innerWidth - mousePosition.x + 60, // アイコン左側に60px離れて表示
     zIndex: 1000,
-    pointerEvents: 'none'
+    pointerEvents: 'auto' // ホバー検知のため変更
   };
 
   return (
     <div 
       style={popupStyle}
-      className="bg-white rounded-lg shadow-lg border border-gray-200 p-4 max-w-64"
+      className="bg-white rounded-lg shadow-lg border border-gray-200 p-4 max-w-64 hover-popup"
     >
       {/* タイトル */}
       <h3 className="font-semibold text-gray-900 text-base mb-3 leading-tight">

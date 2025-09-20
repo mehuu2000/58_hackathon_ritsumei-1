@@ -1,7 +1,7 @@
 'use client';
 
 import { MapContainer as LeafletMapContainer, TileLayer, useMapEvents, Marker, useMap } from 'react-leaflet';
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import L from 'leaflet';
 import { renderToString } from 'react-dom/server';
 import { MapPin } from 'phosphor-react';
@@ -155,6 +155,36 @@ export default function MapContainer({ interactive = true, clickedPoint, onMapCl
   const [hoveredPost, setHoveredPost] = useState<Post | null>(null);
   const [mousePosition, setMousePosition] = useState<{ x: number; y: number }>({ x: 0, y: 0 });
   const [popupPosition, setPopupPosition] = useState<'left' | 'right'>('right');
+  const hoverTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+
+  // グローバルマウス監視で確実にクリア
+  useEffect(() => {
+    const handleGlobalMouseMove = (e: MouseEvent) => {
+      if (!hoveredPost) return;
+      
+      // ポップアップとアイコンの領域外をチェック
+      const target = e.target as HTMLElement;
+      const isOverPopup = target.closest('.hover-popup');
+      const isOverIcon = target.closest('.custom-post-icon');
+      
+      if (!isOverPopup && !isOverIcon) {
+        // 領域外なら即座に非表示
+        if (hoverTimeoutRef.current) {
+          clearTimeout(hoverTimeoutRef.current);
+        }
+        setHoveredPost(null);
+      }
+    };
+
+    document.addEventListener('mousemove', handleGlobalMouseMove);
+    
+    return () => {
+      document.removeEventListener('mousemove', handleGlobalMouseMove);
+      if (hoverTimeoutRef.current) {
+        clearTimeout(hoverTimeoutRef.current);
+      }
+    };
+  }, [hoveredPost]);
 
   useEffect(() => {
     console.log('MapContainer mounted, interactive:', interactive);
@@ -248,12 +278,10 @@ export default function MapContainer({ interactive = true, clickedPoint, onMapCl
                 const centerX = window.innerWidth / 2;
                 const iconCenterX = point.x;
                 
+                // 即座に表示
                 setHoveredPost(post);
                 setMousePosition({ x: iconCenterX, y: point.y });
                 setPopupPosition(iconCenterX < centerX ? 'left' : 'right');
-              },
-              mouseout: () => {
-                setHoveredPost(null);
               }
             } : {}}
           />
