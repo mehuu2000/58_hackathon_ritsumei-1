@@ -3,7 +3,7 @@ import httpx
 from fastapi import APIRouter, HTTPException
 from typing import List
 from pydantic import BaseModel, Field
-from services.gsi_service import get_prefecture_from_coords
+from backend.news.services.gsi_service import get_prefecture_from_coords
 
 # --- データ構造（Pydanticモデル）の定義 ---
 class NewsArticle(BaseModel):
