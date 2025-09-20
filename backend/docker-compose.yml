@@ -14,4 +14,4 @@ services:
       timeout: 10s
       retries: 5
     dns:
-      - 8.8.8.8
+      - 1.1.1.1
