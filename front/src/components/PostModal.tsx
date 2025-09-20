@@ -150,20 +150,32 @@ export default function PostModal({ isVisible, onClose, selectedLocation, user, 
     }
   };
 
+  // 投稿可能かどうかの判定
+  const canPost = () => {
+    return title.trim() && 
+           selectedTag && 
+           rewardAmount.trim() && 
+           deadlineYear && deadlineMonth && deadlineDay;
+  };
+
   // 投稿処理
   const handlePost = async () => {
+    if (!canPost()) {
+      return;
+    }
+    
     try {
       const postData = {
         title,
-        IconURL: IconURL || null,
+        IconURL: IconURL || '',
         detail: description,
-        selectTag: selectedTag || '',
-        subTags: subTags.length > 0 ? subTags : null,
-        selectedImage: selectedImage || null,
+        selectTag: selectedTag,
+        subTags: subTags.length > 0 ? subTags : '',
+        selectedImage: selectedImage || '',
         distribution_reward: Math.round(parseInt(rewardAmount || '0') * distributionRatio),
         direct_reward: Math.round(parseInt(rewardAmount || '0') * (1 - distributionRatio)),
-        latitude: selectedLocation?.lat.toString() || '',
-        longitude: selectedLocation?.lng.toString() || '',
+        latitude: selectedLocation?.lat,
+        longitude: selectedLocation?.lng,
         achievementName: achievementName || null,
         post_limit: `${deadlineYear}-${deadlineMonth.padStart(2, '0')}-${deadlineDay.padStart(2, '0')}`
       };
@@ -615,7 +627,12 @@ export default function PostModal({ isVisible, onClose, selectedLocation, user, 
                   <div>
                     <button
                       onClick={handlePost}
-                      className="px-8 py-2 text-white text-base font-semibold rounded-lg transition-colors hover:opacity-80 mt-6"
+                      disabled={!canPost()}
+                      className={`px-8 py-2 text-white text-base font-semibold rounded-lg transition-colors mt-6 ${
+                        canPost() 
+                          ? 'hover:opacity-80' 
+                          : 'opacity-50 cursor-not-allowed'
+                      }`}
                       style={{ backgroundColor: '#7BB8FF' }}
                     >
                       投稿
