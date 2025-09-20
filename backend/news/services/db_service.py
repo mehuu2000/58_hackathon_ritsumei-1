@@ -11,13 +11,10 @@ def get_supabase_client() -> Client:
     return create_client(url, key)
 
 async def save_article_if_not_exists(article_data: Dict[str, Any]):
-    """
-    指定された記事がまだ存在しない場合のみ、データベースに保存する。
-    """
-    supabase = get_supabase_client()
-    table_name = "news"  # ★ Supabaseで作成したテーブル名に合わせてください
 
     try:
+        supabase = get_supabase_client()
+        table_name = "news" 
         # 1. 記事のURLがすでに存在するかどうかを確認
         existing = supabase.table(table_name).select("id").eq("url", article_data["url"]).execute()
         
@@ -29,9 +26,23 @@ async def save_article_if_not_exists(article_data: Dict[str, Any]):
         # 2. 存在しない場合は、新しい記事として挿入
         response = supabase.table(table_name).insert(article_data).execute()
         
+        # PostgRESTのAPI応答をチェック
+        if response.data:
+            print(f"Article saved successfully: {article_data['url']}")
+            return {"status": "saved", "data": response.data[0]}
+        else:
+            # response.errorがある場合など
+            print(f"Database insert failed, but no exception was raised. Response: {response}")
+            return {"status": "error", "error": "Insert failed without exception."}
+
         print(f"Article saved: {article_data['url']}")
         return {"status": "saved", "data": response.data[0]}
 
     except Exception as e:
-        print(f"Database error: {e}")
+        # ★ エラー発生時に、より詳細な情報を出力する
+        print("!!!!!! DATABASE SERVICE ERROR !!!!!!")
+        print(f"An exception occurred: {type(e).__name__}")
+        print(f"Error details: {e}")
+        print(f"Data being processed: {article_data}")
+        print("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!")
         return {"status": "error", "error": str(e)}

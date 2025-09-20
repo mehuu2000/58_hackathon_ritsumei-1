@@ -67,23 +67,26 @@ async def get_news_by_location(location: LocationRequest):
                  raise HTTPException(status_code=404, detail=f"「{prefecture}」に関するニュースが見つかりませんでした。")
             
             for article in articles:
-            # データベースの設計図に合わせてデータを整形する
+                # データベースの設計図に合わせてデータを整形
                 article_to_save = {
-                    "id": str(uuid.uuid4()),  # ランダムなIDを生成
+                    "id": str(uuid.uuid4()),
                     "title": article.get("title"),
                     "description": article.get("description"),
                     "content": article.get("content"),
                     "url": article.get("url"),
-                    "image_url": article.get("image"), # キー名を 'image' から 'image_url' に変更
-                    "published_at": article.get("publishedAt"), # キー名を 'publishedAt' から 'published_at' に変更
-                    "source_name": article.get("source", {}).get("name"), # sourceオブジェクトから名前を取得
-                    "source_url": article.get("source", {}).get("url"),   # sourceオブジェクトからURLを取得
+                    "image_url": article.get("image"),
+                    "published_at": article.get("publishedAt"),
+                    "source_name": article.get("source", {}).get("name"),
+                    "source_url": article.get("source", {}).get("url"),
                     "prefectures": prefecture
-            }
+                }
+                # ループの中で、1件ずつデータベース保存サービスを呼び出す
+                await save_article_if_not_exists(article_to_save)
+            
+            # ★ すべてのループ処理が終わった後に、結果を返す
             return articles
         
         except httpx.RequestError as e:
             raise HTTPException(status_code=502, detail=f"GNews APIへの接続に失敗しました: {e}")
     
             # データベース保存サービスを呼び出す
-            await save_article_if_not_exists(article_to_save)
