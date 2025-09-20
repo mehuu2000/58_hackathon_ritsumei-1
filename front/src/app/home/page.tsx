@@ -19,6 +19,7 @@ const MapContainer = dynamic(() => import('@/components/MapContainer'), {
 interface User {
   uid: string;
   display_name?: string;
+  token: number;
   access_token: string;
   email: string;
   created_at: string;
@@ -35,6 +36,7 @@ export default function HomePage() {
   const [user] = useState<User>({
     uid: '12345678-1234-1234-1234-123456789abc',
     display_name: '山田太郎',
+    token: 1250,
     access_token: 'abcdefg1234567',
     email: 'yamada@example.com',
     created_at: '2025-01-15T10:30:00Z'

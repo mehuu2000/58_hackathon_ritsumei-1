@@ -6,6 +6,7 @@ import { X, User, Plus, Image, Upload, ArrowRight, Calendar } from 'phosphor-rea
 interface User {
   uid: string;
   display_name?: string;
+  token: number;
   access_token: string;
   email: string;
   created_at: string;
@@ -221,7 +222,7 @@ export default function PostModal({ isVisible, onClose, selectedLocation, user, 
                   {/* 所持トークン表示 */}
                   <div>
                     <span className="text-sm text-gray-600 mb-1 block">所持トークン</span>
-                    <span className="text-2xl font-bold text-black">{user.access_token.toLocaleString()}t</span>
+                    <span className="text-2xl font-bold text-black">{user.token.toLocaleString()}t</span>
                   </div>
                   
                   {/* タイトル入力 */}
