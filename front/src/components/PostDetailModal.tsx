@@ -27,22 +27,19 @@ export default function PostDetailModal({ post, isVisible, onClose, onAnimationC
     });
   }, [post, isVisible, isExpanded, showContent, showFrame]);
 
-  // アニメーション制御（NewsComponentのパターンに完全準拠）
+  // アニメーション制御（PostModalと同じパターン）
   useEffect(() => {
     if (isVisible && post) {
-      // 開く時：即座に内容と枠を表示、そして拡張アニメーション開始
-      setShowContent(true);
+      // 開く時：即座に枠を表示し、少し遅らせて内容を表示
       setShowFrame(true);
-      // 少し遅らせて拡張アニメーション開始
       const timer = setTimeout(() => {
-        setIsExpanded(true);
-      }, 10);
+        setShowContent(true);
+      }, 50);
       return () => clearTimeout(timer);
     } else {
-      // 閉じる時：まず拡張を停止、500ms後に内容と枠を非表示
-      setIsExpanded(false);
+      // 閉じる時：即座に内容を非表示、500ms後に枠を非表示
+      setShowContent(false);
       const timer = setTimeout(() => {
-        setShowContent(false);
         setShowFrame(false);
         // アニメーション完了を親に通知
         if (onAnimationComplete) {
