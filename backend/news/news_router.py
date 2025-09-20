@@ -1,13 +1,14 @@
 print("★★★★★ news_router.py is being loaded! ★★★★★")
 import os
 import httpx
+import uuid
 from fastapi import APIRouter, HTTPException
 from typing import List
 from pydantic import BaseModel, Field
 from backend.news.services.gsi_service import get_prefecture_from_coords
+from backend.news.services.db_service import save_article_if_not_exists
 
 # --- データ構造（Pydanticモデル）の定義 ---
-
 class NewsSource(BaseModel):
     name: str | None = None
     url: str | None = None
@@ -15,6 +16,7 @@ class NewsArticle(BaseModel):
     title: str
     description: str | None = None
     url: str
+    image: str | None = None
     source: NewsSource | None = None
     publishedAt: str | None = None
 
@@ -64,7 +66,24 @@ async def get_news_by_location(location: LocationRequest):
             if not articles:
                  raise HTTPException(status_code=404, detail=f"「{prefecture}」に関するニュースが見つかりませんでした。")
             
+            for article in articles:
+            # データベースの設計図に合わせてデータを整形する
+                article_to_save = {
+                    "id": str(uuid.uuid4()),  # ランダムなIDを生成
+                    "title": article.get("title"),
+                    "description": article.get("description"),
+                    "content": article.get("content"),
+                    "url": article.get("url"),
+                    "image_url": article.get("image"), # キー名を 'image' から 'image_url' に変更
+                    "published_at": article.get("publishedAt"), # キー名を 'publishedAt' から 'published_at' に変更
+                    "source_name": article.get("source", {}).get("name"), # sourceオブジェクトから名前を取得
+                    "source_url": article.get("source", {}).get("url"),   # sourceオブジェクトからURLを取得
+                    "prefectures": prefecture
+            }
             return articles
         
         except httpx.RequestError as e:
             raise HTTPException(status_code=502, detail=f"GNews APIへの接続に失敗しました: {e}")
+    
+            # データベース保存サービスを呼び出す
+            await save_article_if_not_exists(article_to_save)
