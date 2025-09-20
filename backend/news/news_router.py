@@ -2,8 +2,8 @@ from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel, Field
 
 # --- 他のファイルから必要なサービスをインポート ---
-from gsi_service import get_prefecture_from_coords
-from gnews_service import get_news_for_prefecture
+from .gsi_service import get_prefecture_from_coords
+from .gnews_service import get_news_for_prefecture
 
 
 # --- データ構造（Pydanticモデル）の定義 ---
