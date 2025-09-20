@@ -24,7 +24,6 @@ class NewsArticle(BaseModel):
     source: NewsSource | None = None
     publishedAt: str | None = None
 
-# --- ▼▼▼ ここから追加 ▼▼▼ ---
 # データベースのテーブル構造に合わせたレスポンスモデル
 class ArticleInDB(BaseModel):
     id: str
@@ -40,7 +39,6 @@ class ArticleInDB(BaseModel):
     
     class Config:
         from_attributes = True # ORMオブジェクトからでもPydanticモデルに変換できるようにする設定
-# --- ▲▲▲ ここまで追加 ▲▲▲ ---
 
 class LocationRequest(BaseModel):   
     latitude: float = Field(..., example=35.6895, description="緯度")
@@ -54,7 +52,6 @@ GNEWS_API_KEY = os.getenv("GNEWS_API_KEY")
 def hello_check():
     return {"message": "News router is loaded correctly!"}
 
-# --- ▼▼▼ レスポンスモデルを変更 ▼▼▼ ---
 @router.post("/get-news-by-location", response_model=List[ArticleInDB])
 async def get_news_by_location(location: LocationRequest):
     """
@@ -65,54 +62,58 @@ async def get_news_by_location(location: LocationRequest):
     if not prefecture:
         raise HTTPException(status_code=404, detail="指定された座標から都道府県を特定できませんでした。")
     
-    if not GNEWS_API_KEY:
-        raise HTTPException(status_code=500, detail="APIキーが設定されていません。")
-
-    gnews_api_url = "https://gnews.io/api/v4/search"
-    params = {
-        "q": prefecture,
-        "token": GNEWS_API_KEY,
-        "lang": "ja",
-        "country": "jp",
-        "max": 10, # 少し多めに取得しても良いでしょう
-    }
-
-    try:
-        async with httpx.AsyncClient() as client:
-            response = await client.get(gnews_api_url, params=params)
-            response.raise_for_status()
-            data = response.json()
-
-        articles = data.get("articles", [])
-        if articles:
-            save_tasks = []
-            for article in articles:
-                article_to_save = {
-                    "id": str(uuid.uuid4()),
-                    "title": article.get("title"),
-                    "description": article.get("description"),
-                    "content": article.get("content"),
-                    "url": article.get("url"),
-                    "image_url": article.get("image"),
-                    "published_at": article.get("publishedAt"),
-                    "source_name": article.get("source", {}).get("name"),
-                    "source_url": article.get("source", {}).get("url"),
-                    "prefectures": prefecture
-                }
-                save_tasks.append(save_article_if_not_exists(article_to_save))
+    articles_from_api = [] # APIから取得した記事を一時的に保持するリスト
+    if GNEWS_API_KEY:
+        try:
+            gnews_api_url = "https://gnews.io/api/v4/search"
+            params = {
+                "q": prefecture,
+                "token": GNEWS_API_KEY,
+                "lang": "ja",
+                "country": "jp",
+                "max": 10, # 少し多めに取得しても良いでしょう
+            }
+            async with httpx.AsyncClient() as client:
+                response = await client.get(gnews_api_url, params=params)
+                response.raise_for_status()
+                data = response.json()
+                articles = data.get("articles", [])
             
-            await asyncio.gather(*save_tasks)
-        
-        # --- ▼▼▼ 返り値をDBから取得した全記事に変更 ▼▼▼ ---
-        all_articles_in_db = await get_articles_by_prefecture(prefecture)
-        
-        if not all_articles_in_db and not articles:
-            raise HTTPException(status_code=404, detail=f"「{prefecture}」に関するニュースが見つかりませんでした。")
-            
-        return all_articles_in_db
-        # --- ▲▲▲ ここまで変更 ▲▲▲ ---
+            if articles:
+                save_tasks = []
+                for article in articles:
+                    article_to_save = {
+                        "id": str(uuid.uuid4()),
+                        "title": article.get("title"),
+                        "description": article.get("description"),
+                        "content": article.get("content"),
+                        "url": article.get("url"),
+                        "image_url": article.get("image"),
+                        "published_at": article.get("publishedAt"),
+                        "source_name": article.get("source", {}).get("name"),
+                        "source_url": article.get("source", {}).get("url"),
+                        "prefectures": prefecture
+                    }
+                    save_tasks.append(save_article_if_not_exists(article_to_save))
+                
+                await asyncio.gather(*save_tasks)
 
-    except httpx.RequestError as e:
-        raise HTTPException(status_code=502, detail=f"GNews APIへの接続に失敗しました: {e}")
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=f"内部サーバーエラー: {e}")
+        except httpx.HTTPStatusError as e:
+            # 401, 429エラーの場合はログに出力するだけで、処理は続行（フォールバック）
+            if e.response.status_code in [401, 429]:
+                print(f"GNews API returned {e.response.status_code}. Falling back to DB cache.")
+            else:
+                # その他のHTTPエラーはクライアントに通知
+                raise HTTPException(status_code=e.response.status_code, detail=f"GNews API error: {e}")
+        except httpx.RequestError as e:
+            # 接続エラーなど
+            raise HTTPException(status_code=502, detail=f"GNews API connection failed: {e}")
+    
+    # --- どのルートを通っても、最終的にこの処理が実行される ---
+    all_articles_in_db = await get_articles_by_prefecture(prefecture)
+    
+    # APIからもDBからも記事が取得できなかった場合のみ404エラーを返す
+    if not all_articles_in_db:
+        raise HTTPException(status_code=404, detail=f"「{prefecture}」に関するニュースが見つかりませんでした。")
+        
+    return all_articles_in_db
