@@ -193,6 +193,7 @@ export default function MapContainer({ interactive = true, clickedPoint, onMapCl
     console.log('地図がクリックされました:', lat, lng);
   };
 
+
   if (isLoading) {
     return (
       <div style={{ height: '100%', width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#aaa' }}>
