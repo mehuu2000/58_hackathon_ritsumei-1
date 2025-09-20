@@ -2,7 +2,7 @@ import os
 import httpx
 from dotenv import load_dotenv
 # ★ インポート元を変更
-from api.news_router import NewsArticle
+from backend.news.news_router import NewsArticle
 
 # .envファイルから環境変数を読み込む
 load_dotenv()

@@ -2,8 +2,8 @@ from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel, Field
 
 # --- 他のファイルから必要なサービスをインポート ---
-from services.gsi_service import get_prefecture_from_coords
-from services.gnews_service import get_news_for_prefecture
+from gsi_service import get_prefecture_from_coords
+from gnews_service import get_news_for_prefecture
 
 
 # --- データ構造（Pydanticモデル）の定義 ---
@@ -17,7 +17,7 @@ class NewsArticle(BaseModel):
     url: str
 
 # ---ルーターの作成 ---
-router = APIRouter(prefix="/api", tags=["news"])
+router = APIRouter(prefix="/news", tags=["news"])
 
 
 # --- エンドポイントの定義 ---
