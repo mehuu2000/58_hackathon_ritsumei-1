@@ -21,12 +21,15 @@ interface PostModalProps {
 export default function PostModal({ isVisible, onClose, selectedLocation, user }: PostModalProps) {
   const [showContent, setShowContent] = useState(false);
   const [showFrame, setShowFrame] = useState(false);
+  const [IconId, setIconId] = useState<string>('');
+  const [description, setDescription] = useState<string>('');
   const [selectedTag, setSelectedTag] = useState<string | null>(null);
   const [subTags, setSubTags] = useState<string[]>([]);
   const [subTagInput, setSubTagInput] = useState('');
   const [selectedImage, setSelectedImage] = useState<string | null>(null);
   const [rewardAmount, setRewardAmount] = useState('');
   const [distributionRatio, setDistributionRatio] = useState(0.5); // 0=解決者100%, 1=貢献者100%
+  const [achievementName, setAchievementName] = useState<string>('');
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   // アニメーション制御
@@ -70,6 +73,42 @@ export default function PostModal({ isVisible, onClose, selectedLocation, user }
     const contributorAmount = Math.round(total * distributionRatio);
     const solverAmount = total - contributorAmount;
     return { solverAmount, contributorAmount };
+  };
+
+  // 投稿処理
+  const handlePost = async () => {
+    try {
+      // TODO: 実際のAPIエンドポイントに変更
+      // const response = await fetch('/api/posts', {
+      //   method: 'POST',
+      //   headers: {
+      //     'Content-Type': 'application/json',
+      //   },
+      //   body: JSON.stringify({
+      //     IconId,
+      //     lat : selectedLocation?.lat,
+      //     lng : selectedLocation?.lng,
+      //     description,
+      //     selectedTag,
+      //     subTags,
+      //     selectedImage,
+      //     rewardAmount,
+      //     distributionRatio,
+      //     achievementName,
+      //   }),
+      // });
+
+      // if (response.ok) {
+      //   console.log('投稿成功');
+      //   onClose();
+      // } else {
+      //   console.error('投稿失敗:', response.statusText);
+      // }
+      console.log('投稿処理');
+      onClose();
+    } catch (error) {
+      console.error('投稿エラー:', error);
+    }
   };
 
   if (!showFrame) return null;
@@ -379,6 +418,50 @@ export default function PostModal({ isVisible, onClose, selectedLocation, user }
                       </div>
                     </div>
                   </div>
+                </div>
+                
+                {/* アチーブメント設定 */}
+                <div className="mt-6">
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    アチーブ
+                  </label>
+                  
+                  {/* アチーブメント名表示エリア */}
+                  <div className="w-full h-12 bg-gray-50 border border-gray-300 rounded-lg px-4 py-3 mb-1 flex items-center justify-center">
+                    <span className="text-gray-500 text-sm">
+                      {achievementName || 'アチーブメント名が表示されます'}
+                    </span>
+                  </div>
+                  
+                  {/* 生成ボタンと消費表示 */}
+                  <div className="flex justify-center">
+                    <div className="flex flex-col items-center">
+                      <button
+                        onClick={() => {
+                          // TODO: アチーブメント生成処理
+                          setAchievementName('環境保護アチーブメント');
+                        }}
+                        className="px-6 py-1 text-white text-sm font-semibold rounded-lg transition-colors hover:opacity-80"
+                        style={{ backgroundColor: '#7BB8FF' }}
+                      >
+                        生成
+                      </button>
+                      <div className="text-xs text-red-400">
+                        100t消費
+                      </div>
+                    </div>
+                  </div>
+                </div>
+                
+                {/* 投稿ボタン */}
+                <div className="absolute bottom-0 right-0">
+                  <button
+                    onClick={handlePost}
+                    className="px-8 py-2 text-white text-base font-semibold rounded-lg transition-colors hover:opacity-80"
+                    style={{ backgroundColor: '#7BB8FF' }}
+                  >
+                    投稿
+                  </button>
                 </div>
               </div>
             </div>
