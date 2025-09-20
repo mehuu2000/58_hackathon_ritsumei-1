@@ -1,6 +1,6 @@
 import os
 from supabase import create_client, Client
-from typing import Dict, Any
+from typing import Dict, Any, List
 
 def get_supabase_client() -> Client:
     """Supabaseクライアントを初期化して返す"""
@@ -46,3 +46,24 @@ async def save_article_if_not_exists(article_data: Dict[str, Any]):
         print(f"Data being processed: {article_data}")
         print("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!")
         return {"status": "error", "error": str(e)}
+    
+async def get_articles_by_prefecture(prefecture: str) -> List[Dict[str, Any]]:
+    """
+    指定された都道府県の記事をデータベースからすべて取得する
+    """
+    try:
+        supabase = get_supabase_client()
+        table_name = "news"
+        # "prefectures"カラムが指定された都道府県と一致するレコードをすべて選択
+        response = supabase.table(table_name).select("*").eq("prefectures", prefecture).execute()
+        
+        if response.data:
+            return response.data
+        return []
+    except Exception as e:
+        print("!!!!!! DATABASE SERVICE ERROR (get_articles_by_prefecture) !!!!!!")
+        print(f"An exception occurred: {type(e).__name__}")
+        print(f"Error details: {e}")
+        print(f"Prefecture being processed: {prefecture}")
+        print("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!")
+        return []
