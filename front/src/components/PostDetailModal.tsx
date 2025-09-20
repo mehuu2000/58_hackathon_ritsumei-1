@@ -13,25 +13,33 @@ interface PostDetailModalProps {
 export default function PostDetailModal({ post, isVisible, onClose }: PostDetailModalProps) {
   const [showContent, setShowContent] = useState(false);
   const [showFrame, setShowFrame] = useState(false);
+  const [isExpanded, setIsExpanded] = useState(false);
 
   // デバッグログ
   useEffect(() => {
     console.log('PostDetailModal props変更:', { 
       postTitle: post?.title || 'null', 
       isVisible, 
+      isExpanded,
       showContent, 
       showFrame 
     });
-  }, [post, isVisible, showContent, showFrame]);
+  }, [post, isVisible, isExpanded, showContent, showFrame]);
 
-  // アニメーション制御（NewsComponentを参考）
+  // アニメーション制御（NewsComponentのパターンに完全準拠）
   useEffect(() => {
     if (isVisible && post) {
-      // 開く時：即座に内容と枠を表示
+      // 開く時：即座に内容と枠を表示、そして拡張アニメーション開始
       setShowContent(true);
       setShowFrame(true);
+      // 少し遅らせて拡張アニメーション開始
+      const timer = setTimeout(() => {
+        setIsExpanded(true);
+      }, 10);
+      return () => clearTimeout(timer);
     } else {
-      // 閉じる時：500ms後（アニメーション終了後）に内容と枠を非表示
+      // 閉じる時：まず拡張を停止、500ms後に内容と枠を非表示
+      setIsExpanded(false);
       const timer = setTimeout(() => {
         setShowContent(false);
         setShowFrame(false);
@@ -39,8 +47,6 @@ export default function PostDetailModal({ post, isVisible, onClose }: PostDetail
       return () => clearTimeout(timer);
     }
   }, [isVisible, post]);
-
-  if (!post) return null;
 
   return (
     <>
@@ -52,18 +58,19 @@ export default function PostDetailModal({ post, isVisible, onClose }: PostDetail
         />
       )}
       
-      {/* モーダル本体 */}
-      <div 
-        className={`fixed left-0 top-0 h-screen z-[700] transition-[width] duration-500 ease-out overflow-hidden ${
-          isVisible 
-            ? 'w-[40%]' 
-            : 'w-0'
-        } ${
-          showFrame
-            ? 'bg-white shadow-xl border-r border-gray-300'
-            : ''
-        }`}
-      >
+      {/* モーダル本体（常に存在、閉じている時は幅0） */}
+      {post && (
+        <div 
+          className={`fixed left-0 top-0 h-screen z-[700] transition-[width] duration-500 ease-out overflow-hidden ${
+            isExpanded 
+              ? 'w-[40%]' 
+              : 'w-0'
+          } ${
+            showFrame
+              ? 'bg-white shadow-xl border-r border-gray-300'
+              : ''
+          }`}
+        >
         {showContent && (
           <div className="h-full flex flex-col">
             {/* ヘッダー */}
@@ -98,7 +105,8 @@ export default function PostDetailModal({ post, isVisible, onClose }: PostDetail
             </div>
           </div>
         )}
-      </div>
+        </div>
+      )}
     </>
   );
 }
