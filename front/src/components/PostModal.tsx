@@ -26,6 +26,7 @@ export default function PostModal({ isVisible, onClose, selectedLocation, user }
   const [selectedTag, setSelectedTag] = useState<string | null>(null);
   const [subTags, setSubTags] = useState<string[]>([]);
   const [subTagInput, setSubTagInput] = useState('');
+  const [isComposing, setIsComposing] = useState(false);
   const [selectedImage, setSelectedImage] = useState<string | null>(null);
   const [rewardAmount, setRewardAmount] = useState('');
   const [distributionRatio, setDistributionRatio] = useState(0.5); // 0=解決者100%, 1=貢献者100%
@@ -263,8 +264,10 @@ export default function PostModal({ isVisible, onClose, selectedLocation, user }
                       placeholder="サブタグを入力..."
                       className="flex-1 px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200"
                       maxLength={20}
-                      onKeyPress={(e) => {
-                        if (e.key === 'Enter') {
+                      onCompositionStart={() => setIsComposing(true)}
+                      onCompositionEnd={() => setIsComposing(false)}
+                      onKeyDown={(e) => {
+                        if (e.key === 'Enter' && !isComposing) {
                           e.preventDefault();
                           if (subTagInput.trim() && subTags.length < 4) {
                             setSubTags([...subTags, subTagInput.trim()]);
