@@ -104,7 +104,7 @@ export default function PostHoverPopup({ post, isVisible, position, mousePositio
       {post.achivement && (
         <div className="mb-3">
           <div className="bg-purple-100 text-purple-600 px-2 py-1 rounded text-xs text-center">
-            {post.achivement}
+            {post.achivement.name}
           </div>
         </div>
       )}
