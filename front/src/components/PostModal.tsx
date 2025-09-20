@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect, useRef } from 'react';
-import { X, User, Plus, Image, Upload, ArrowRight, Calendar } from 'phosphor-react';
+import { X, User, Plus, Image, Upload, ArrowRight, Calendar, MagnifyingGlass } from 'phosphor-react';
 import { Post } from '@/data/mockPosts';
 
 interface User {
@@ -19,15 +19,19 @@ interface PostModalProps {
   user: User;
   onPostSubmit: (newPost: Post) => void;
   onUserTokenUpdate: (newTokenCount: number) => void;
+  posts: Post[];
 }
 
-export default function PostModal({ isVisible, onClose, selectedLocation, user, onPostSubmit, onUserTokenUpdate }: PostModalProps) {
+export default function PostModal({ isVisible, onClose, selectedLocation, user, onPostSubmit, onUserTokenUpdate, posts }: PostModalProps) {
   const [showContent, setShowContent] = useState(false);
   const [showFrame, setShowFrame] = useState(false);
   
   const [title, setTitle] = useState<string>('');
   const [IconURL, setIconURL] = useState<string>('');
   const [description, setDescription] = useState<string>('');
+  const [iconCreationMethod, setIconCreationMethod] = useState<'ai' | 'existing' | null>(null);
+  const [showIconSelector, setShowIconSelector] = useState(false);
+  const [iconSearchQuery, setIconSearchQuery] = useState('');
   const [selectedTag, setSelectedTag] = useState<string | null>(null);
   const [subTags, setSubTags] = useState<string[]>([]);
   const [subTagInput, setSubTagInput] = useState('');
@@ -36,6 +40,8 @@ export default function PostModal({ isVisible, onClose, selectedLocation, user, 
   const [rewardAmount, setRewardAmount] = useState('');
   const [distributionRatio, setDistributionRatio] = useState(0.5); // 0=解決者100%, 1=貢献者100%
   const [achievementName, setAchievementName] = useState<string>('');
+  const [isGeneratingAchievement, setIsGeneratingAchievement] = useState(false);
+  const [isCreatingPost, setIsCreatingPost] = useState(false);
   // デフォルトの期限を現在から一週間後に設定
   const getDefaultDeadline = () => {
     const oneWeekLater = new Date();
@@ -53,6 +59,52 @@ export default function PostModal({ isVisible, onClose, selectedLocation, user, 
   const [deadlineDay, setDeadlineDay] = useState<string>(defaultDeadline.day);
   const [showCalendar, setShowCalendar] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  // メインタグのID→name変換マップ
+  const mainTagMap: {[key: string]: string} = {
+    "276643c6-4e69-4d62-a7ba-457125d20a4f": "福祉",
+    "9a755098-dc5c-414d-92e3-f49c219589a1": "ゴミ",
+    "9acd6e59-ecc6-4654-a3ca-61a0d646e1aa": "環境",
+    "9f8bdc28-a28b-4647-b18f-56f8fafdbfca": "教育"
+  };
+
+  // 投稿を検索でフィルタリング
+  const filteredPosts = posts.filter(post =>
+    post.title.toLowerCase().includes(iconSearchQuery.toLowerCase()) ||
+    post.tag_list.some(tag => {
+      const tagName = tag.attribute ? (mainTagMap[tag.name] || tag.name) : tag.name;
+      return tagName.toLowerCase().includes(iconSearchQuery.toLowerCase());
+    })
+  );
+
+  // 表示する投稿リストを決定（検索結果が20件以下の場合はランダムに20件追加）
+  const getDisplayPosts = () => {
+    if (filteredPosts.length >= 20) {
+      return filteredPosts;
+    }
+    
+    // 検索結果が20件未満の場合、全投稿からランダムに選んで20件にする
+    const remainingPosts = posts.filter(post => !filteredPosts.includes(post));
+    const shuffled = remainingPosts.sort(() => 0.5 - Math.random());
+    const additionalPosts = shuffled.slice(0, 20 - filteredPosts.length);
+    
+    return [...filteredPosts, ...additionalPosts];
+  };
+
+  const displayPosts = getDisplayPosts();
+
+  // アイコン選択処理
+  const handleIconSelect = (iconURL: string) => {
+    setIconURL(iconURL);
+    setShowIconSelector(false);
+    setIconSearchQuery('');
+  };
+
+  // 既存選択ボタンの処理
+  const handleExistingIconClick = () => {
+    setIconCreationMethod('existing');
+    setShowIconSelector(true);
+  };
 
   // アニメーション制御
   useEffect(() => {
@@ -120,6 +172,7 @@ export default function PostModal({ isVisible, onClose, selectedLocation, user, 
 
   // アチーブメント生成処理
   const handleGenerateAchievement = async () => {
+    setIsGeneratingAchievement(true);
     try {
       const response = await fetch('http://bomu.info:8000/generate-achivement', {
         method: 'POST',
@@ -148,6 +201,8 @@ export default function PostModal({ isVisible, onClose, selectedLocation, user, 
       }
     } catch (error) {
       console.error('アチーブメント生成エラー:', error);
+    } finally {
+      setIsGeneratingAchievement(false);
     }
   };
 
@@ -156,7 +211,8 @@ export default function PostModal({ isVisible, onClose, selectedLocation, user, 
     return title.trim() && 
            selectedTag && 
            rewardAmount.trim() && 
-           deadlineYear && deadlineMonth && deadlineDay;
+           deadlineYear && deadlineMonth && deadlineDay &&
+           iconCreationMethod !== null; // アイコン作成方式が選択されている
   };
 
   // 投稿処理
@@ -165,10 +221,19 @@ export default function PostModal({ isVisible, onClose, selectedLocation, user, 
       return;
     }
     
+    setIsCreatingPost(true);
     try {
+      // アイコン作成方式に基づいてIconURLを設定
+      let finalIconURL = '';
+      if (iconCreationMethod === 'existing' && IconURL) {
+        finalIconURL = IconURL;
+      } else if (iconCreationMethod === 'ai') {
+        finalIconURL = ''; // AI作成の場合は空文字列
+      }
+
       const postData = {
         title,
-        IconURL: IconURL || '',
+        IconURL: finalIconURL,
         detail: description,
         selectTag: selectedTag,
         subTags: subTags,
@@ -201,6 +266,8 @@ export default function PostModal({ isVisible, onClose, selectedLocation, user, 
       }
     } catch (error) {
       console.error('投稿エラー:', error);
+    } finally {
+      setIsCreatingPost(false);
     }
   };
 
@@ -282,12 +349,26 @@ export default function PostModal({ isVisible, onClose, selectedLocation, user, 
                   {/* ボタン群 */}
                   <div className="flex flex-col justify-between h-28">
                     <div className="flex flex-col items-end">
-                      <button className="px-9 py-2 text-white text-base font-semibold rounded transition-colors hover:opacity-80" style={{ backgroundColor: '#7BB8FF' }}>
+                      <button 
+                        onClick={() => setIconCreationMethod(iconCreationMethod === 'ai' ? null : 'ai')}
+                        className={`px-9 py-2 text-base font-semibold rounded transition-colors border-2 ${
+                          iconCreationMethod === 'ai' 
+                            ? 'bg-blue-500 text-white border-blue-500' 
+                            : 'bg-white text-blue-500 border-blue-500 hover:bg-blue-50'
+                        }`}
+                      >
                         AIで生成
                       </button>
                       <div className="text-sm text-red-400 text-center">100t消費</div>
                     </div>
-                    <button className="px-9 py-2 text-white text-base font-semibold rounded transition-colors hover:opacity-80" style={{ backgroundColor: '#7BB8FF' }}>
+                    <button 
+                      onClick={handleExistingIconClick}
+                      className={`px-9 py-2 text-base font-semibold rounded transition-colors border-2 ${
+                        iconCreationMethod === 'existing' 
+                          ? 'bg-blue-500 text-white border-blue-500' 
+                          : 'bg-white text-blue-500 border-blue-500 hover:bg-blue-50'
+                      }`}
+                    >
                       既存選択
                     </button>
                   </div>
@@ -565,15 +646,15 @@ export default function PostModal({ isVisible, onClose, selectedLocation, user, 
                     <div className="flex flex-col items-center">
                       <button
                         onClick={handleGenerateAchievement}
-                        disabled={!title.trim() || !description.trim()}
+                        disabled={!title.trim() || !description.trim() || isGeneratingAchievement}
                         className={`px-6 py-1 text-white text-sm font-semibold rounded-lg transition-colors ${
-                          title.trim() && description.trim() 
+                          (title.trim() && description.trim() && !isGeneratingAchievement)
                             ? 'hover:opacity-80' 
                             : 'opacity-50 cursor-not-allowed'
                         }`}
                         style={{ backgroundColor: '#7BB8FF' }}
                       >
-                        生成
+                        {isGeneratingAchievement ? '作成中...' : '生成'}
                       </button>
                       <div className="text-xs text-red-400">
                         100t消費
@@ -635,15 +716,15 @@ export default function PostModal({ isVisible, onClose, selectedLocation, user, 
                   <div>
                     <button
                       onClick={handlePost}
-                      disabled={!canPost()}
+                      disabled={!canPost() || isCreatingPost}
                       className={`px-8 py-2 text-white text-base font-semibold rounded-lg transition-colors mt-6 ${
-                        canPost() 
+                        (canPost() && !isCreatingPost)
                           ? 'hover:opacity-80' 
                           : 'opacity-50 cursor-not-allowed'
                       }`}
                       style={{ backgroundColor: '#7BB8FF' }}
                     >
-                      投稿
+                      {isCreatingPost ? '作成中...' : '投稿'}
                     </button>
                   </div>
                 </div>
@@ -681,6 +762,75 @@ export default function PostModal({ isVisible, onClose, selectedLocation, user, 
           )}
         </div>
       </div>
+      
+      {/* アイコン選択ポップアップ */}
+      {showIconSelector && (
+        <div className="fixed inset-0 z-[900] flex items-center justify-center bg-black bg-opacity-50 pointer-events-auto">
+          <div className="bg-white rounded-lg shadow-xl p-6 max-w-2xl w-full mx-4 max-h-[80vh] flex flex-col">
+            <div className="flex justify-between items-center mb-4">
+              <h3 className="text-lg font-semibold text-gray-800">既存のアイコンを選択</h3>
+              <button
+                onClick={() => {
+                  setShowIconSelector(false);
+                  setIconSearchQuery('');
+                }}
+                className="text-gray-500 hover:text-gray-700"
+              >
+                <X size={20} />
+              </button>
+            </div>
+            
+            {/* 検索バー */}
+            <div className="relative mb-4">
+              <MagnifyingGlass 
+                size={16} 
+                className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400"
+              />
+              <input
+                type="text"
+                placeholder="タイトルやタグで検索..."
+                value={iconSearchQuery}
+                onChange={(e) => setIconSearchQuery(e.target.value)}
+                className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+              />
+            </div>
+            
+            {/* アイコン一覧（グリッド表示） */}
+            <div className="flex-1 overflow-y-auto">
+              {displayPosts.length > 0 ? (
+                <div className="grid grid-cols-8 gap-3">
+                  {displayPosts.map((post, index) => (
+                    <div
+                      key={index}
+                      onClick={() => handleIconSelect(post.IconURL)}
+                      className="w-16 h-16 bg-gray-200 rounded-full flex items-center justify-center overflow-hidden cursor-pointer hover:ring-2 hover:ring-blue-500 transition-all transform hover:scale-105"
+                      title={post.title} // ホバー時にタイトルを表示
+                    >
+                      {post.IconURL ? (
+                        <img
+                          src={post.IconURL}
+                          alt={post.title}
+                          className="w-full h-full object-cover"
+                          onError={(e) => {
+                            e.currentTarget.style.display = 'none';
+                            e.currentTarget.parentElement!.innerHTML = '<div class="w-full h-full flex items-center justify-center"><svg width="24" height="24" viewBox="0 0 256 256" fill="currentColor"><path d="M230.92,212c-15.23-26.33-38.7-45.21-66.09-54.16a72,72,0,1,0-73.66,0C63.78,166.78,40.31,185.66,25.08,212a8,8,0,1,0,13.85,8c18.84-32.56,52.14-52,89.07-52s70.23,19.44,89.07,52a8,8,0,1,0,13.85-8ZM72,96a56,56,0,1,1,56,56A56.06,56.06,0,0,1,72,96Z"></path></svg></div>';
+                          }}
+                        />
+                      ) : (
+                        <User size={32} className="text-gray-500" />
+                      )}
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <div className="text-center text-gray-500 py-8">
+                  検索結果が見つかりません
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

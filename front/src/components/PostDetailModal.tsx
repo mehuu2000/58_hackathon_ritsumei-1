@@ -24,6 +24,14 @@ interface PostDetailModalProps {
 export default function PostDetailModal({ post, isVisible, onClose, onAnimationComplete, user, onCommentAdd }: PostDetailModalProps) {
   const [showContent, setShowContent] = useState(false);
   const [showFrame, setShowFrame] = useState(false);
+  
+  // メインタグのID→name変換マップ
+  const mainTagMap: {[key: string]: string} = {
+    "276643c6-4e69-4d62-a7ba-457125d20a4f": "福祉",
+    "9a755098-dc5c-414d-92e3-f49c219589a1": "ゴミ",
+    "9acd6e59-ecc6-4654-a3ca-61a0d646e1aa": "環境",
+    "9f8bdc28-a28b-4647-b18f-56f8fafdbfca": "教育"
+  };
   const [isExpanded, setIsExpanded] = useState(false);
   const [likedComments, setLikedComments] = useState<Set<string>>(new Set());
   const [commentLikeCounts, setCommentLikeCounts] = useState<{[key: string]: number}>({});
@@ -423,6 +431,58 @@ export default function PostDetailModal({ post, isVisible, onClose, onAnimationC
                         <p className="text-gray-700 text-sm">{post.achivement.name}</p>
                       ) : (
                         <p className="text-gray-500 text-sm">アチーブメントはありません</p>
+                      )}
+                    </div>
+                  </div>
+
+                  {/* タグ表示 */}
+                  <div>
+                    <div className="space-y-3">
+                      {/* メインタグ（attribute: true） */}
+                      {post.tag_list.filter(tag => tag.attribute).length > 0 && (
+                        <div>
+                          <p className="text-xs text-gray-600 mb-1">メインタグ</p>
+                          <div className="flex flex-wrap gap-2">
+                            {post.tag_list
+                              .filter(tag => tag.attribute)
+                              .map((tag, index) => {
+                                // tag.nameがIDの場合はmainTagMapで変換、そうでなければそのまま表示
+                                const displayName = mainTagMap[tag.name] || tag.name;
+                                return (
+                                  <span
+                                    key={index}
+                                    className="px-3 py-1 bg-blue-500 text-white text-xs font-medium rounded-full"
+                                  >
+                                    {displayName}
+                                  </span>
+                                );
+                              })}
+                          </div>
+                        </div>
+                      )}
+                      
+                      {/* サブタグ（attribute: false） */}
+                      {post.tag_list.filter(tag => !tag.attribute).length > 0 && (
+                        <div>
+                          <p className="text-xs text-gray-600 mb-1">サブタグ</p>
+                          <div className="flex flex-wrap gap-2">
+                            {post.tag_list
+                              .filter(tag => !tag.attribute)
+                              .map((tag, index) => (
+                                <span
+                                  key={index}
+                                  className="px-3 py-1 bg-gray-100 text-gray-700 text-xs font-medium rounded-full border border-gray-300"
+                                >
+                                  {tag.name}
+                                </span>
+                              ))}
+                          </div>
+                        </div>
+                      )}
+                      
+                      {/* タグがない場合 */}
+                      {post.tag_list.length === 0 && (
+                        <p className="text-gray-500 text-sm">タグはありません</p>
                       )}
                     </div>
                   </div>
