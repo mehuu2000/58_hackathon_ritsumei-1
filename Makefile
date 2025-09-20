@@ -2,15 +2,15 @@
 
 # フロントエンドのDockerイメージをビルドして起動
 front-build:
-	(cd front_docker && docker-compose up -d --build)
+	(cd front_docker ; docker compose up -d --build)
 
 # フロントエンドのDockerコンテナを起動（ビルド済み前提）
 front-up:
-	(cd front_docker && docker-compose up -d)
+	(cd front_docker ; docker compose up -d)
 
 # フロントエンドのDockerコンテナを停止
 front-stop:
-	(cd front_docker && docker-compose stop)
+	(cd front_docker ; docker compose stop)
 
 # フロントエンドのDockerコンテナを再起動
 front-restart: front-stop front-up
@@ -19,15 +19,15 @@ front-restart: front-stop front-up
 
 # バックエンドのDockerイメージをビルドして起動
 backend-build:
-	(cd backend && docker-compose up -d --build)
+	(cd backend ; docker compose up -d --build)
 
 # バックエンドのDockerコンテナを起動（ビルド済み前提）
 backend-up:
-	(cd backend && docker-compose up -d)
+	(cd backend ; docker compose up -d)
 
 # バックエンドのDockerコンテナを停止
 backend-stop:
-	(cd backend && docker-compose stop)
+	(cd backend ; docker compose stop)
 
 # バックエンドのDockerコンテナを再起動
 backend-restart: backend-stop backend-up
