@@ -218,13 +218,11 @@ export default function MapContainer({ interactive = true, clickedPoint, onMapCl
                          target.closest('.post-mode-enabled');
       
       if (!isOverPopup && !isOverIcon) {
-        // 領域外なら300ms後に非表示（誤動作防止のためディレイ）
+        // 領域外なら即座に非表示
         if (hoverTimeoutRef.current) {
           clearTimeout(hoverTimeoutRef.current);
         }
-        hoverTimeoutRef.current = setTimeout(() => {
-          setHoveredPost(null);
-        }, 300);
+        setHoveredPost(null);
       } else {
         // 領域内にいる場合はタイマーをクリア
         if (hoverTimeoutRef.current) {
@@ -388,17 +386,11 @@ export default function MapContainer({ interactive = true, clickedPoint, onMapCl
               
               console.log('マウスアウトイベント:', post.title);
               
-              // 500ms後に非表示（ポップアップへのマウス移動時間を確保）
+              // 即座に非表示（遅延なし）
               if (hoverTimeoutRef.current) {
                 clearTimeout(hoverTimeoutRef.current);
               }
-              hoverTimeoutRef.current = setTimeout(() => {
-                // ポップアップにマウスが移動していない場合のみ非表示
-                const popup = document.querySelector('.hover-popup:hover');
-                if (!popup) {
-                  setHoveredPost(null);
-                }
-              }, 500);
+              setHoveredPost(null);
             }
           };
           
@@ -429,6 +421,13 @@ export default function MapContainer({ interactive = true, clickedPoint, onMapCl
           isVisible={true}
           position={popupPosition}
           mousePosition={mousePosition}
+          onMouseLeave={() => {
+            // ポップアップから離れた時は即座に非表示
+            if (hoverTimeoutRef.current) {
+              clearTimeout(hoverTimeoutRef.current);
+            }
+            setHoveredPost(null);
+          }}
         />
       )}
 

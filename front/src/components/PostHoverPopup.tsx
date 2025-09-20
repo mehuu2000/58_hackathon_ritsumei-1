@@ -7,9 +7,10 @@ interface PostHoverPopupProps {
   isVisible: boolean;
   position: 'left' | 'right';
   mousePosition: { x: number; y: number };
+  onMouseLeave?: () => void;
 }
 
-export default function PostHoverPopup({ post, isVisible, position, mousePosition }: PostHoverPopupProps) {
+export default function PostHoverPopup({ post, isVisible, position, mousePosition, onMouseLeave }: PostHoverPopupProps) {
   const [formattedDate, setFormattedDate] = useState<string>('');
 
   useEffect(() => {
@@ -50,6 +51,9 @@ export default function PostHoverPopup({ post, isVisible, position, mousePositio
       }}
       onMouseLeave={() => {
         console.log('ポップアップからマウス離脱:', post.title);
+        if (onMouseLeave) {
+          onMouseLeave();
+        }
       }}
     >
       {/* タイトル */}
