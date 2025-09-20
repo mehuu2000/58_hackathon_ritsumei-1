@@ -42,7 +42,7 @@ export interface Post {
   post_good: number;
   comment: Array<{
     id: string;
-    name?: string;
+    name: string;
     context: string;
     comment_time: string;
     post_id: string;

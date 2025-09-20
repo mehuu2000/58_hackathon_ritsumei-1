@@ -30,9 +30,91 @@ export default function HomePage() {
   const [clickedPoint, setClickedPoint] = useState<{ lat: number; lng: number } | null>(null);
   const [isPostMode, setIsPostMode] = useState(false);
   const [isPostModalVisible, setIsPostModalVisible] = useState(false);
-  const [posts, setPosts] = useState<Post[]>(mockPosts);
+  const [posts, setPosts] = useState<Post[]>([]);
   const [user, setUser] = useState<User | null>(null);
   const [isLoadingUser, setIsLoadingUser] = useState(true);
+  const [newsItems, setNewsItems] = useState<any[]>([]);
+  const [currentLocation, setCurrentLocation] = useState<{ lat: number; lng: number } | null>(null);
+
+  // ニュースデータを取得する関数
+  const fetchNews = async (latitude: number, longitude: number) => {
+    const requestData = {
+      latitude: latitude,
+      longitude: longitude
+    };
+    
+    console.log('=== ニュースAPI送信デバッグ情報 ===');
+    console.log('latitude の型:', typeof latitude);
+    console.log('latitude の値:', latitude);
+    console.log('longitude の型:', typeof longitude);
+    console.log('longitude の値:', longitude);
+    console.log('requestData:', requestData);
+    console.log('JSON.stringify(requestData):', JSON.stringify(requestData));
+    console.log('送信先URL:', 'http://bomu.info:8000/news/get-news-by-location');
+    console.log('===================================');
+    
+    try {
+      const response = await fetch('http://bomu.info:8000/news/get-news-by-location', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(requestData)
+      });
+
+      console.log('レスポンスステータス:', response.status);
+      console.log('レスポンスヘッダー:', response.headers);
+
+      if (response.ok) {
+        const newsData = await response.json();
+        console.log('取得したニュースデータ:', newsData);
+        setNewsItems(newsData);
+      } else {
+        // エラーレスポンスの詳細も取得
+        const errorText = await response.text();
+        console.error('ニュースデータ取得失敗:', response.statusText);
+        console.error('エラー詳細:', errorText);
+        setNewsItems([]);
+      }
+    } catch (error) {
+      console.error('ニュースデータ取得エラー:', error);
+      setNewsItems([]);
+    }
+  };
+
+  // 投稿データを取得する関数
+  const fetchPosts = async (accessToken: string) => {
+    try {
+      const response = await fetch('http://bomu.info:8000/posts', {
+        method: 'GET',
+        headers: {
+          'Authorization': `Bearer ${accessToken}`,
+          'Content-Type': 'application/json'
+        }
+      });
+
+      if (response.ok) {
+        const postsData = await response.json();
+        console.log('取得した投稿データ:', postsData);
+        
+        // APIレスポンスは {posts: [...]} の形式
+        if (postsData && postsData.posts && Array.isArray(postsData.posts)) {
+          setPosts(postsData.posts);
+        } else {
+          console.error('APIレスポンスが期待する形式ではありません:', postsData);
+          setPosts(mockPosts);
+        }
+      } else {
+        console.error('投稿データ取得失敗:', response.statusText);
+        // エラー時はモックデータを使用
+        setPosts(mockPosts);
+      }
+    } catch (error) {
+      console.error('投稿データ取得エラー:', error);
+      // エラー時はモックデータを使用
+      setPosts(mockPosts);
+    }
+  };
 
   // fetchAPIでユーザー情報を取得
   useEffect(() => {
@@ -70,6 +152,35 @@ export default function HomePage() {
           };
           
           setUser(user);
+          
+          // ユーザー情報取得成功後、投稿データも取得
+          await fetchPosts(accessToken);
+          
+          // 位置情報を取得してニュースデータを取得
+          if (navigator.geolocation) {
+            navigator.geolocation.getCurrentPosition(
+              (position) => {
+                const { latitude, longitude } = position.coords;
+                setCurrentLocation({ lat: latitude, lng: longitude });
+                fetchNews(latitude, longitude);
+              },
+              (error) => {
+                console.error('位置情報取得エラー:', error);
+                // 位置情報取得に失敗した場合はデフォルト位置（東京）でニュースを取得
+                const defaultLat = 35.6812;
+                const defaultLng = 139.7671;
+                setCurrentLocation({ lat: defaultLat, lng: defaultLng });
+                fetchNews(defaultLat, defaultLng);
+              }
+            );
+          } else {
+            console.error('Geolocation is not supported by this browser.');
+            // Geolocationが使えない場合はデフォルト位置でニュースを取得
+            const defaultLat = 35.6812;
+            const defaultLng = 139.7671;
+            setCurrentLocation({ lat: defaultLat, lng: defaultLng });
+            fetchNews(defaultLat, defaultLng);
+          }
         } else {
           console.error('ユーザー情報取得失敗:', response.statusText);
           // 認証エラーの場合はログインページに戻す
@@ -129,6 +240,29 @@ export default function HomePage() {
     setUser(prevUser => prevUser ? { ...prevUser, token: newTokenCount } : null);
   };
 
+  // コメント追加機能
+  const handleCommentAdd = (postId: string, newComment: any) => {
+    console.log('=== handleCommentAdd 呼び出し ===');
+    console.log('postId:', postId);
+    console.log('newComment:', newComment);
+    console.log('現在のposts配列:', posts);
+    
+    setPosts(prevPosts => {
+      console.log('prevPosts:', prevPosts);
+      const updatedPosts = prevPosts.map(post => {
+        if (post.id === postId) {
+          console.log('マッチした投稿を更新:', post.title);
+          const updatedPost = { ...post, comment: [newComment, ...post.comment] };
+          console.log('更新後の投稿:', updatedPost);
+          return updatedPost;
+        }
+        return post;
+      });
+      console.log('更新後のposts配列:', updatedPosts);
+      return updatedPosts;
+    });
+  };
+
   return (
     <main className="relative h-screen w-screen overflow-hidden">
       {/* 地図を画面いっぱいに表示 */}
@@ -140,6 +274,7 @@ export default function HomePage() {
           posts={posts}
           isPostMode={isPostMode}
           user={user}
+          onCommentAdd={handleCommentAdd}
         />
       </div>
       
@@ -153,6 +288,7 @@ export default function HomePage() {
       <NewsComponent 
         isExpanded={isNewsExpanded}
         setIsExpanded={setIsNewsExpanded}
+        newsItems={newsItems}
       />
       
       {/* 投稿モード時の案内メッセージ（場所未選択時のみ） */}

@@ -18,9 +18,10 @@ interface PostDetailModalProps {
   onClose: () => void;
   onAnimationComplete?: () => void;
   user: User;
+  onCommentAdd?: (postId: string, newComment: any) => void;
 }
 
-export default function PostDetailModal({ post, isVisible, onClose, onAnimationComplete, user }: PostDetailModalProps) {
+export default function PostDetailModal({ post, isVisible, onClose, onAnimationComplete, user, onCommentAdd }: PostDetailModalProps) {
   const [showContent, setShowContent] = useState(false);
   const [showFrame, setShowFrame] = useState(false);
   const [isExpanded, setIsExpanded] = useState(false);
@@ -146,15 +147,65 @@ export default function PostDetailModal({ post, isVisible, onClose, onAnimationC
   };
 
   // コメント送信処理
-  const handleSubmitComment = () => {
-    if (newComment.trim()) {
-      console.log('新しいコメント:', {
-        postId: post?.id,
-        content: newComment,
-        userId: user.uid,
-        userName: user.display_name
+  const handleSubmitComment = async () => {
+    if (!newComment.trim() || !post) return;
+    
+    const requestData = {
+      post_id: post.id,
+      context: newComment
+    };
+    
+    console.log('=== コメント送信デバッグ情報 ===');
+    console.log('post.id の型:', typeof post.id);
+    console.log('post.id の値:', post.id);
+    console.log('newComment の型:', typeof newComment);
+    console.log('newComment の値:', newComment);
+    console.log('user オブジェクト:', user);
+    console.log('user.access_token の型:', typeof user.access_token);
+    console.log('requestData:', requestData);
+    console.log('JSON.stringify(requestData):', JSON.stringify(requestData));
+    console.log('送信先URL:', 'http://bomu.info:8000/comment');
+    console.log('===================================');
+    
+    try {
+      const response = await fetch('http://bomu.info:8000/comment', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${user.access_token}`
+        },
+        body: JSON.stringify(requestData)
       });
-      setNewComment('');
+
+      console.log('レスポンスステータス:', response.status);
+      console.log('レスポンスヘッダー:', response.headers);
+
+      if (response.ok) {
+        const newCommentData = await response.json();
+        console.log('コメント作成成功:', newCommentData);
+        
+        // 親コンポーネントにコメント追加を通知
+        console.log('onCommentAdd関数の存在確認:', typeof onCommentAdd);
+        console.log('post.id:', post.id);
+        console.log('newCommentData:', newCommentData);
+        
+        if (onCommentAdd) {
+          console.log('onCommentAddを呼び出し中...');
+          onCommentAdd(post.id, newCommentData);
+          console.log('onCommentAdd呼び出し完了');
+        } else {
+          console.error('onCommentAdd関数が存在しません');
+        }
+        
+        setNewComment('');
+      } else {
+        // エラーレスポンスの詳細も取得
+        const errorText = await response.text();
+        console.error('コメント作成失敗:', response.statusText);
+        console.error('エラー詳細:', errorText);
+      }
+    } catch (error) {
+      console.error('コメント作成エラー:', error);
     }
   };
 
