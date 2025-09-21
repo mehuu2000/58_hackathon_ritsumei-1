@@ -36,6 +36,36 @@ export default function HomePage() {
   const [newsItems, setNewsItems] = useState<any[]>([]);
   const [currentLocation, setCurrentLocation] = useState<{ lat: number; lng: number } | null>(null);
   
+  const [searchQuery, setSearchQuery] = useState<string>('');
+  const [selectedSort, setSelectedSort] = useState<string | null>(null);
+  
+  // ランキング計算
+  const calculateRanking = (posts: Post[], sortType: string | null) => {
+    if (!sortType) return new Map<string, number>();
+    
+    const sortedPosts = [...posts].sort((a, b) => {
+      switch (sortType) {
+        case 'empathy':
+          return (b.post_good || 0) - (a.post_good || 0);
+        case 'good':
+          return (b.post_good || 0) - (a.post_good || 0);
+        case 'comment':
+          return (b.comment?.length || 0) - (a.comment?.length || 0);
+        default:
+          return 0;
+      }
+    });
+    
+    const ranking = new Map<string, number>();
+    sortedPosts.slice(0, 3).forEach((post, index) => {
+      ranking.set(post.id, index + 1); // 1位、2位、3位
+    });
+    
+    return ranking;
+  };
+  
+  const postRanking = calculateRanking(posts, selectedSort);
+  
   const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL;
 
   // ニュースデータを取得する関数
@@ -277,6 +307,7 @@ export default function HomePage() {
           isPostMode={isPostMode}
           user={user}
           onCommentAdd={handleCommentAdd}
+          postRanking={postRanking}
         />
       </div>
       
@@ -284,6 +315,10 @@ export default function HomePage() {
       <WoodenNavigation 
         isPostMode={isPostMode}
         setIsPostMode={handlePostModeChange}
+        searchQuery={searchQuery}
+        setSearchQuery={setSearchQuery}
+        selectedSort={selectedSort}
+        setSelectedSort={setSelectedSort}
       />
       
       {/* ニュースコンポーネント */}
@@ -306,6 +341,7 @@ export default function HomePage() {
         onPostSubmit={handlePostSubmit}
         onUserTokenUpdate={handleUserTokenUpdate}
         posts={posts}
+        onClearSelectedLocation={() => setClickedPoint(null)}
       />
     </main>
   );
