@@ -40,7 +40,7 @@ export default function TopPage() {
         
         {/* アプリ名 */}
         <div className="fixed top-[10vh] left-1/2 transform -translate-x-1/2 bg-white bg-opacity-95 px-8 py-3 rounded-md z-[999] font-bold whitespace-nowrap text-xl md:text-2xl shadow-lg">
-          マップアプリ
+          EmpaCity
         </div>
         
         {/* 認証オーバーレイ */}
