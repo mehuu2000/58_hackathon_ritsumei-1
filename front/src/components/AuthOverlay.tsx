@@ -9,25 +9,88 @@ export default function AuthOverlay() {
   const [isSignup, setIsSignup] = useState(false);
   const router = useRouter();
 
-  const handleLogin = (e: React.FormEvent) => {
+  const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     if (email && password) {
-      // 認証処理をここに実装
-      alert(`ログイン：仮: ${email}`);
-      // 認証成功後にホームページにリダイレクト
-      router.push('/home');
+      try {
+        const response = await fetch('http://bomu.info:8000/auth/login', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            email: email,
+            password_hash: password
+          })
+        });
+
+        if (!response.ok) {
+          throw new Error(`HTTP error! status: ${response.status}`);
+        }
+
+        const data = await response.json();
+        
+        // レスポンスの詳細をconsole.logで表示
+        console.log('=== ログインレスポンス ===');
+        console.log('access_token:', data.access_token);
+        console.log('refresh_token:', data.refresh_token);
+        console.log('user_id:', data.user_id);
+        console.log('is_authenticated:', data.is_authenticated);
+        console.log('レスポンス全体:', data);
+        
+        // トークン情報をlocalStorageに保存
+        localStorage.setItem('access_token', data.access_token);
+        localStorage.setItem('refresh_token', data.refresh_token);
+        localStorage.setItem('user_id', data.user_id);
+        
+        console.log('✅ localStorage に保存完了');
+        
+        // ログイン成功
+        alert('ログインに成功しました！');
+        
+        // 認証成功後にホームページにリダイレクト
+        router.push('/home');
+        
+      } catch (error) {
+        console.error('ログインエラー:', error);
+        alert(`ログインに失敗しました: ${error instanceof Error ? error.message : 'Unknown error'}`);
+      }
     } else {
       alert('メールアドレスとパスワードを入力してください');
     }
   };
 
-  const handleSignup = (e: React.FormEvent) => {
+  const handleSignup = async (e: React.FormEvent) => {
     e.preventDefault();
     if (email && password) {
-      // サインアップ処理をここに実装
-      alert(`サインアップ：仮: ${email}`);
-      // サインアップ成功後にホームページにリダイレクト
-      router.push('/home');
+      try {
+        const response = await fetch('http://bomu.info:8000/auth/sign-up', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            email: email,
+            password_hash: password
+          })
+        });
+
+        if (!response.ok) {
+          throw new Error(`HTTP error! status: ${response.status}`);
+        }
+
+        const data = await response.json();
+        
+        // サインアップ成功
+        alert('サインアップが完了しました！ログインしてください。');
+        
+        // ログイン画面に切り替え
+        setIsSignup(false);
+        
+      } catch (error) {
+        console.error('サインアップエラー:', error);
+        alert(`サインアップに失敗しました: ${error instanceof Error ? error.message : 'Unknown error'}`);
+      }
     } else {
       alert('すべての項目を入力してください');
     }
