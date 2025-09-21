@@ -25,6 +25,8 @@ export default function PostDetailModal({ post, isVisible, onClose, onAnimationC
   const [showContent, setShowContent] = useState(false);
   const [showFrame, setShowFrame] = useState(false);
   
+  const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL;
+  
   // メインタグのID→name変換マップ
   const mainTagMap: {[key: string]: string} = {
     "276643c6-4e69-4d62-a7ba-457125d20a4f": "福祉",
@@ -90,7 +92,7 @@ export default function PostDetailModal({ post, isVisible, onClose, onAnimationC
   // いいね機能のAPI呼び出し
   const handleLikeComment = async (commentId: string) => {
     try {
-      const response = await fetch(`http://bomu.info:8000/reaction/comment/${commentId}`, {
+      const response = await fetch(`${API_BASE_URL}/reaction/comment/${commentId}`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -130,7 +132,7 @@ export default function PostDetailModal({ post, isVisible, onClose, onAnimationC
     if (!post) return;
     
     try {
-      const response = await fetch(`http://bomu.info:8000/reaction/post/${post.id}`, {
+      const response = await fetch(`${API_BASE_URL}/reaction/post/${post.id}`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -172,11 +174,11 @@ export default function PostDetailModal({ post, isVisible, onClose, onAnimationC
     console.log('user.access_token の型:', typeof user.access_token);
     console.log('requestData:', requestData);
     console.log('JSON.stringify(requestData):', JSON.stringify(requestData));
-    console.log('送信先URL:', 'http://bomu.info:8000/comment');
+    console.log('送信先URL:', `${API_BASE_URL}/comment`);
     console.log('===================================');
     
     try {
-      const response = await fetch('http://bomu.info:8000/comment', {
+      const response = await fetch(`${API_BASE_URL}/comment`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

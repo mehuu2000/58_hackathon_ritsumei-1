@@ -8,12 +8,14 @@ export default function AuthOverlay() {
   const [password, setPassword] = useState('');
   const [isSignup, setIsSignup] = useState(false);
   const router = useRouter();
+  
+  const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL;
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     if (email && password) {
       try {
-        const response = await fetch('http://bomu.info:8000/auth/login', {
+        const response = await fetch(`${API_BASE_URL}/auth/login`, {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
@@ -64,7 +66,7 @@ export default function AuthOverlay() {
     e.preventDefault();
     if (email && password) {
       try {
-        const response = await fetch('http://bomu.info:8000/auth/sign-up', {
+        const response = await fetch(`${API_BASE_URL}/auth/sign-up`, {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',

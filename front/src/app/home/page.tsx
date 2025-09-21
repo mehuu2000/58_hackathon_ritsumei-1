@@ -35,6 +35,8 @@ export default function HomePage() {
   const [isLoadingUser, setIsLoadingUser] = useState(true);
   const [newsItems, setNewsItems] = useState<any[]>([]);
   const [currentLocation, setCurrentLocation] = useState<{ lat: number; lng: number } | null>(null);
+  
+  const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL;
 
   // ニュースデータを取得する関数
   const fetchNews = async (latitude: number, longitude: number) => {
@@ -50,11 +52,11 @@ export default function HomePage() {
     console.log('longitude の値:', longitude);
     console.log('requestData:', requestData);
     console.log('JSON.stringify(requestData):', JSON.stringify(requestData));
-    console.log('送信先URL:', 'http://bomu.info:8000/news/get-news-by-location');
+    console.log('送信先URL:', `${API_BASE_URL}/news/get-news-by-location`);
     console.log('===================================');
     
     try {
-      const response = await fetch('http://bomu.info:8000/news/get-news-by-location', {
+      const response = await fetch(`${API_BASE_URL}/news/get-news-by-location`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json'
@@ -85,7 +87,7 @@ export default function HomePage() {
   // 投稿データを取得する関数
   const fetchPosts = async (accessToken: string) => {
     try {
-      const response = await fetch('http://bomu.info:8000/posts', {
+      const response = await fetch(`${API_BASE_URL}/posts`, {
         method: 'GET',
         headers: {
           'Authorization': `Bearer ${accessToken}`,
@@ -130,7 +132,7 @@ export default function HomePage() {
         }
 
         // ユーザー情報をAPIから取得
-        const response = await fetch(`http://bomu.info:8000/profile/${userId}`, {
+        const response = await fetch(`${API_BASE_URL}/profile/${userId}`, {
           method: 'GET',
           headers: {
             'Authorization': `Bearer ${accessToken}`,

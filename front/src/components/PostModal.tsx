@@ -26,6 +26,8 @@ export default function PostModal({ isVisible, onClose, selectedLocation, user, 
   const [showContent, setShowContent] = useState(false);
   const [showFrame, setShowFrame] = useState(false);
   
+  const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL;
+  
   const [title, setTitle] = useState<string>('');
   const [IconURL, setIconURL] = useState<string>('');
   const [description, setDescription] = useState<string>('');
@@ -174,7 +176,7 @@ export default function PostModal({ isVisible, onClose, selectedLocation, user, 
   const handleGenerateAchievement = async () => {
     setIsGeneratingAchievement(true);
     try {
-      const response = await fetch('http://bomu.info:8000/generate-achivement', {
+      const response = await fetch(`${API_BASE_URL}/generate-achivement`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -247,7 +249,7 @@ export default function PostModal({ isVisible, onClose, selectedLocation, user, 
       };
 
       // APIリクエスト送信
-      const response = await fetch('http://bomu.info:8000/posts', {
+      const response = await fetch(`${API_BASE_URL}/posts`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
