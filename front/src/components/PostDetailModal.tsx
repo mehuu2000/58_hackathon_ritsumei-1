@@ -40,6 +40,7 @@ export default function PostDetailModal({ post, isVisible, onClose, onAnimationC
   const [newComment, setNewComment] = useState<string>('');
   const [isPostLiked, setIsPostLiked] = useState<boolean>(false);
   const [postLikeCount, setPostLikeCount] = useState<number>(0);
+  const [bestAnswerId, setBestAnswerId] = useState<string | null>(null);
 
   // デバッグログ
   useEffect(() => {
@@ -219,6 +220,50 @@ export default function PostDetailModal({ post, isVisible, onClose, onAnimationC
     }
   };
 
+  // ベストアンサー任命処理
+  const handleSetBestAnswer = async (commentId: string) => {
+    if (!post) return;
+    
+    // 確認ダイアログを表示
+    const confirmed = window.confirm('このコメントをベストアンサーに任命しますか？');
+    if (!confirmed) return;
+    
+    try {
+      const response = await fetch(`${API_BASE_URL}/posts/${post.id}/best-answer`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${user.access_token}`
+        },
+        body: JSON.stringify({
+          comment_id: commentId
+        })
+      });
+
+      if (response.ok) {
+        const result = await response.json();
+        console.log('ベストアンサー任命成功:', result);
+        
+        // 返り値からbest_answer_idを設定
+        setBestAnswerId(result.best_answer_comment_id);
+        
+        alert('ベストアンサーに任命しました！');
+      } else {
+        console.error('ベストアンサー任命失敗:', response.statusText);
+        alert('ベストアンサーの任命に失敗しました。');
+      }
+    } catch (error) {
+      console.error('ベストアンサー任命エラー:', error);
+      alert('エラーが発生しました。');
+    }
+  };
+
+  // ベストアンサー任命権限の確認
+  const canSetBestAnswer = (commentId: string) => {
+    const currentBestAnswerId = bestAnswerId || post?.best_answer_id;
+    return user.uid === post?.UID && !currentBestAnswerId;
+  };
+
   if (!showFrame) return null;
 
   return (
@@ -253,7 +298,8 @@ export default function PostDetailModal({ post, isVisible, onClose, onAnimationC
                     {post.comment
                       .sort((a, b) => new Date(b.comment_time).getTime() - new Date(a.comment_time).getTime())
                       .map((comment) => {
-                        const isBestAnswer = post.best_answer_id && post.best_answer_id === comment.id;
+                        const currentBestAnswerId = bestAnswerId || post.best_answer_id;
+                        const isBestAnswer = currentBestAnswerId && currentBestAnswerId === comment.id;
                         const commentDate = new Date(comment.comment_time);
                         const formattedDate = `${commentDate.getFullYear()}年${commentDate.getMonth() + 1}月${commentDate.getDate()}日 ${commentDate.getHours()}:${commentDate.getMinutes().toString().padStart(2, '0')}`;
                         
@@ -285,20 +331,32 @@ export default function PostDetailModal({ post, isVisible, onClose, onAnimationC
                                     {comment.context}
                                   </p>
                                   
-                                  {/* いいねボタンと日時 */}
+                                  {/* いいねボタンと日時、ベストアンサー任命ボタン */}
                                   <div className="flex items-center justify-between">
-                                    <button 
-                                      onClick={() => handleLikeComment(comment.id)}
-                                      className="flex items-center space-x-1 text-gray-500 hover:text-red-500 transition-colors"
-                                    >
-                                      <Heart 
-                                        size={16} 
-                                        className={`${likedComments.has(comment.id) ? 'text-red-500 fill-red-500' : 'text-red-400'} transition-colors`} 
-                                      />
-                                      <span className="text-sm">
-                                        {commentLikeCounts[comment.id] !== undefined ? commentLikeCounts[comment.id] : comment.comment_good}
-                                      </span>
-                                    </button>
+                                    <div className="flex items-center space-x-2">
+                                      <button 
+                                        onClick={() => handleLikeComment(comment.id)}
+                                        className="flex items-center space-x-1 text-gray-500 hover:text-red-500 transition-colors"
+                                      >
+                                        <Heart 
+                                          size={16} 
+                                          className={`${likedComments.has(comment.id) ? 'text-red-500 fill-red-500' : 'text-red-400'} transition-colors`} 
+                                        />
+                                        <span className="text-sm">
+                                          {commentLikeCounts[comment.id] !== undefined ? commentLikeCounts[comment.id] : comment.comment_good}
+                                        </span>
+                                      </button>
+                                      
+                                      {/* ベストアンサー任命ボタン */}
+                                      {canSetBestAnswer(comment.id) && (
+                                        <button
+                                          onClick={() => handleSetBestAnswer(comment.id)}
+                                          className="px-2 py-1 text-xs bg-yellow-400 text-white rounded hover:bg-yellow-500 transition-colors font-semibold"
+                                        >
+                                          best!
+                                        </button>
+                                      )}
+                                    </div>
                                     <span className="text-xs text-gray-400">
                                       {formattedDate}
                                     </span>
