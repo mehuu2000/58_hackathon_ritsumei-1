@@ -25,7 +25,7 @@ export default function PostDetailModal({ post, isVisible, onClose, onAnimationC
   const [showContent, setShowContent] = useState(false);
   const [showFrame, setShowFrame] = useState(false);
   
-  const API_BASE_URL = "https://bomu.info:8443";
+  const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL;
   
   // メインタグのID→name変換マップ
   const mainTagMap: {[key: string]: string} = {
