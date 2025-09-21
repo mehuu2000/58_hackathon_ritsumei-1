@@ -19,6 +19,7 @@ export default function WoodenNavigation({ isPostMode = false, setIsPostMode }: 
   const { isNavigationExpanded, setIsNavigationExpanded } = useNavigation();
   const [showContent, setShowContent] = useState(false);
   const [showFrame, setShowFrame] = useState(false);
+  const [isSearchPopupVisible, setIsSearchPopupVisible] = useState(false);
 
   // アニメーション制御
   useEffect(() => {
@@ -45,7 +46,7 @@ export default function WoodenNavigation({ isPostMode = false, setIsPostMode }: 
     {
       icon: MagnifyingGlass,
       label: '検索',
-      action: () => console.log('検索 clicked'),
+      action: () => setIsSearchPopupVisible(!isSearchPopupVisible),
     },
     {
       icon: PencilSimple,
@@ -134,6 +135,34 @@ export default function WoodenNavigation({ isPostMode = false, setIsPostMode }: 
           </div>
         ) : null}
       </div>
+      
+      {/* 検索ポップアップ */}
+      {isSearchPopupVisible && (
+        <div 
+          className="absolute bottom-16 left-1/2 transform -translate-x-1/2 w-96 bg-white rounded-lg shadow-xl border border-gray-200 z-50 flex flex-col"
+          style={{
+            background: 'linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%)'
+          }}
+        >
+          {/* ポップアップヘッダー */}
+          <div className="flex items-center justify-between p-4 border-b border-gray-200">
+            <h3 className="text-lg font-semibold text-gray-800">検索・ソート</h3>
+            <button
+              onClick={() => setIsSearchPopupVisible(false)}
+              className="text-gray-500 hover:text-gray-700 transition-colors"
+            >
+              ✕
+            </button>
+          </div>
+          
+          {/* ポップアップ内容（今は空） */}
+          <div className="p-4 flex-1">
+            <div className="flex items-center justify-center h-full text-gray-500">
+              ここに検索・ソート機能を実装予定
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
