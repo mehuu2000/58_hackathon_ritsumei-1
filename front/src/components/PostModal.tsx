@@ -20,9 +20,10 @@ interface PostModalProps {
   onPostSubmit: (newPost: Post) => void;
   onUserTokenUpdate: (newTokenCount: number) => void;
   posts: Post[];
+  onClearSelectedLocation?: () => void;
 }
 
-export default function PostModal({ isVisible, onClose, selectedLocation, user, onPostSubmit, onUserTokenUpdate, posts }: PostModalProps) {
+export default function PostModal({ isVisible, onClose, selectedLocation, user, onPostSubmit, onUserTokenUpdate, posts, onClearSelectedLocation }: PostModalProps) {
   const [showContent, setShowContent] = useState(false);
   const [showFrame, setShowFrame] = useState(false);
   
@@ -94,6 +95,34 @@ export default function PostModal({ isVisible, onClose, selectedLocation, user, 
   };
 
   const displayPosts = getDisplayPosts();
+
+  // フィールドをクリアする関数
+  const clearAllFields = () => {
+    setTitle('');
+    setIconURL('');
+    setDescription('');
+    setIconCreationMethod(null);
+    setShowIconSelector(false);
+    setIconSearchQuery('');
+    setSelectedTag(null);
+    setSubTags([]);
+    setSubTagInput('');
+    setSelectedImage(null);
+    setRewardAmount('');
+    setDistributionRatio(0.5);
+    setAchievementName('');
+    
+    // 期限を一週間後にリセット
+    const newDefaultDeadline = getDefaultDeadline();
+    setDeadlineYear(newDefaultDeadline.year);
+    setDeadlineMonth(newDefaultDeadline.month);
+    setDeadlineDay(newDefaultDeadline.day);
+    
+    // ファイル入力もクリア
+    if (fileInputRef.current) {
+      fileInputRef.current.value = '';
+    }
+  };
 
   // アイコン選択処理
   const handleIconSelect = (iconURL: string) => {
@@ -262,6 +291,8 @@ export default function PostModal({ isVisible, onClose, selectedLocation, user, 
         const newPost: Post = await response.json();
         onPostSubmit(newPost);
         console.log('投稿成功');
+        clearAllFields(); // フィールドをクリア
+        onClearSelectedLocation?.(); // 選択座標をクリア
         onClose();
       } else {
         console.error('投稿失敗:', response.statusText);

@@ -341,6 +341,7 @@ export default function HomePage() {
         onPostSubmit={handlePostSubmit}
         onUserTokenUpdate={handleUserTokenUpdate}
         posts={posts}
+        onClearSelectedLocation={() => setClickedPoint(null)}
       />
     </main>
   );
