@@ -26,7 +26,7 @@ export default function PostModal({ isVisible, onClose, selectedLocation, user, 
   const [showContent, setShowContent] = useState(false);
   const [showFrame, setShowFrame] = useState(false);
   
-  const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL;
+  const API_BASE_URL = "https://bomu.info:8443";
   
   const [title, setTitle] = useState<string>('');
   const [IconURL, setIconURL] = useState<string>('');

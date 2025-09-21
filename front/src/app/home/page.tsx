@@ -36,7 +36,7 @@ export default function HomePage() {
   const [newsItems, setNewsItems] = useState<any[]>([]);
   const [currentLocation, setCurrentLocation] = useState<{ lat: number; lng: number } | null>(null);
   
-  const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL;
+  const API_BASE_URL = "https://bomu.info:8443";
 
   // ニュースデータを取得する関数
   const fetchNews = async (latitude: number, longitude: number) => {
