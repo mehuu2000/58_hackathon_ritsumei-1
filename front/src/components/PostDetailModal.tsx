@@ -261,7 +261,7 @@ export default function PostDetailModal({ post, isVisible, onClose, onAnimationC
   // ベストアンサー任命権限の確認
   const canSetBestAnswer = (commentId: string) => {
     const currentBestAnswerId = bestAnswerId || post?.best_answer_id;
-    return user.uid === post?.UID && !currentBestAnswerId;
+    return user.uid === post?.uid && !currentBestAnswerId;
   };
 
   if (!showFrame) return null;

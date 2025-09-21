@@ -19,7 +19,7 @@ export interface Achievement {
 
 export interface Post {
   id: string;
-  UID?: string;
+  uid: string;
   user_name?: string;
   prefectures: string;
   lat: number;
@@ -55,7 +55,7 @@ export interface Post {
 export const mockPosts: Post[] = [
   {
     id: "post_001",
-    UID: "user_001",
+    uid: "user_001",
     user_name: "田中太郎",
     prefectures: "大阪府",
     lat: 34.7024854,
@@ -107,7 +107,7 @@ export const mockPosts: Post[] = [
   },
   {
     id: "post_002",
-    UID: "8f008d11-0295-473c-9c8f-e6fbc848c207",
+    uid: "8f008d11-0295-473c-9c8f-e6fbc848c207",
     user_name: "山田花子",
     prefectures: "京都府",
     lat: 34.7100000,
@@ -143,7 +143,7 @@ export const mockPosts: Post[] = [
   },
   {
     id: "post_003",
-    UID: "user_003",
+    uid: "user_003",
     user_name: "佐藤一郎",
     prefectures: "兵庫県",
     lat: 34.6950000,
