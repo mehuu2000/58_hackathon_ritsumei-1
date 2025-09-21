@@ -9,7 +9,7 @@ export default function AuthOverlay() {
   const [isSignup, setIsSignup] = useState(false);
   const router = useRouter();
   
-  const API_BASE_URL = "https://bomu.info:8443";
+  const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL;
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
