@@ -403,15 +403,20 @@ export default function PostDetailModal({ post, isVisible, onClose, onAnimationC
                 
                 {/* 右半分：投稿詳細情報 */}
                 <div className="w-1/2 pl-4 flex flex-col space-y-4">
-                  {/* ユーザー情報と投稿日時 */}
+                  {/* タイトルとユーザー情報 */}
                   <div>
+                    {/* タイトル */}
                     <div className="flex items-center space-x-2 mb-1">
                       <span className="font-semibold text-gray-800">
-                        {post.user_name || post.id}
+                        {post.title}
                       </span>
                       <span className="text-gray-600">
                         {post.prefectures}
                       </span>
+                    </div>
+                    {/* ユーザー名 */}
+                    <div className="text-left text-sm text-gray-600">
+                      {post.user_name || post.id}
                     </div>
                     <div className="text-sm text-gray-500">
                       {new Date(post.post_time).toLocaleDateString('ja-JP', {

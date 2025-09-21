@@ -4,7 +4,7 @@ import { MapContainer as LeafletMapContainer, TileLayer, useMapEvents, Marker, u
 import { useEffect, useState, useRef } from 'react';
 import L from 'leaflet';
 import { renderToString } from 'react-dom/server';
-import { MapPin } from 'phosphor-react';
+import { MapPin, Crown } from 'phosphor-react';
 import { Post } from '@/data/mockPosts';
 import PostHoverPopup from './PostHoverPopup';
 import PostDetailModal from './PostDetailModal';
@@ -25,6 +25,7 @@ interface MapContainerProps {
   isPostMode?: boolean;
   user: User;
   onCommentAdd?: (postId: string, newComment: any) => void;
+  postRanking?: Map<string, number>;
 }
 
 const TOKYO_POSITION: [number, number] = [35.6812, 139.7671]; // 東京駅
@@ -59,7 +60,7 @@ const createCustomIcon = (lat: number, lng: number) => {
 };
 
 // 投稿用のカスタムアイコンを作成
-const createPostIcon = (post: Post, isPostMode: boolean = false) => {
+const createPostIcon = (post: Post, isPostMode: boolean = false, ranking?: number) => {
   // タイトルを2行に制限する関数
   const truncateTitle = (title: string, maxLength: number = 20) => {
     if (title.length <= maxLength) {
@@ -69,8 +70,32 @@ const createPostIcon = (post: Post, isPostMode: boolean = false) => {
     return title.substring(0, maxLength - 3) + '...';
   };
 
+  // ランキングに応じた王冠の色を決定
+  const getCrownColor = (rank: number) => {
+    switch (rank) {
+      case 1: return '#FFD700'; // 金色
+      case 2: return '#C0C0C0'; // 銀色
+      case 3: return '#CD7F32'; // 銅色
+      default: return '#FFD700';
+    }
+  };
+
+  // 王冠のSVGを生成（PhosphorのCrownアイコンをベースに）
+  const crownSvg = ranking ? `
+    <div style="position: absolute; top: -10px; left: 50%; transform: translateX(-50%); z-index: 1000;">
+      <svg width="24" height="24" viewBox="0 0 256 256" fill="${getCrownColor(ranking)}" stroke="#000" stroke-width="2">
+        <path d="M216,152V88a8,8,0,0,0-12.8-6.4L128,132.69,52.8,81.6A8,8,0,0,0,40,88v64a8,8,0,0,0,8,8H208A8,8,0,0,0,216,152Z"/>
+        <circle cx="128" cy="64" r="8"/>
+        <circle cx="80" cy="80" r="6"/>
+        <circle cx="176" cy="80" r="6"/>
+        <rect x="48" y="160" width="160" height="8" rx="4"/>
+      </svg>
+    </div>
+  ` : '';
+
   const iconHtml = `
-    <div class="custom-icon-wrapper">
+    <div class="custom-icon-wrapper" style="position: relative;">
+      ${crownSvg}
       <div class="custom-icon-title">
         ${truncateTitle(post.title)}
       </div>
@@ -222,7 +247,7 @@ function PostDetailViewController({
   return null;
 }
 
-export default function MapContainer({ interactive = true, clickedPoint, onMapClick, posts = [], isPostMode = false, user, onCommentAdd }: MapContainerProps) {
+export default function MapContainer({ interactive = true, clickedPoint, onMapClick, posts = [], isPostMode = false, user, onCommentAdd, postRanking = new Map() }: MapContainerProps) {
   console.log('MapContainer props:', { postsCount: posts.length, isPostMode, interactive });
   
   const [position, setPosition] = useState<[number, number]>(TOKYO_POSITION);
@@ -446,7 +471,7 @@ export default function MapContainer({ interactive = true, clickedPoint, onMapCl
             <Marker
               key={`post-${post.title}-${index}`}
               position={[post.lat, post.lng]}
-              icon={createPostIcon(post, isPostMode)}
+              icon={createPostIcon(post, isPostMode, postRanking.get(post.id))}
               eventHandlers={markerEventHandlers}
             />
           );
