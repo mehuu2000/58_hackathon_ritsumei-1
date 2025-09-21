@@ -80,18 +80,12 @@ const createPostIcon = (post: Post, isPostMode: boolean = false, ranking?: numbe
     }
   };
 
-  // 王冠のSVGを生成（PhosphorのCrownアイコンをベースに）
-  const crownSvg = ranking ? `
-    <div style="position: absolute; top: -10px; left: 50%; transform: translateX(-50%); z-index: 1000;">
-      <svg width="24" height="24" viewBox="0 0 256 256" fill="${getCrownColor(ranking)}" stroke="#000" stroke-width="2">
-        <path d="M216,152V88a8,8,0,0,0-12.8-6.4L128,132.69,52.8,81.6A8,8,0,0,0,40,88v64a8,8,0,0,0,8,8H208A8,8,0,0,0,216,152Z"/>
-        <circle cx="128" cy="64" r="8"/>
-        <circle cx="80" cy="80" r="6"/>
-        <circle cx="176" cy="80" r="6"/>
-        <rect x="48" y="160" width="160" height="8" rx="4"/>
-      </svg>
+  // PhosphorのCrownアイコンを使用してSVGを生成
+  const crownSvg = ranking ? renderToString(
+    <div style={{ position: 'absolute', top: '-25px', left: '50%', transform: 'translateX(-50%)', zIndex: 1000 }}>
+      <Crown size={32} color={getCrownColor(ranking)} weight="fill" />
     </div>
-  ` : '';
+  ) : '';
 
   const iconHtml = `
     <div class="custom-icon-wrapper" style="position: relative;">
