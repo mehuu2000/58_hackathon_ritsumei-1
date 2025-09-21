@@ -261,7 +261,7 @@ export default function PostDetailModal({ post, isVisible, onClose, onAnimationC
   // ベストアンサー任命権限の確認
   const canSetBestAnswer = (commentId: string) => {
     const currentBestAnswerId = bestAnswerId || post?.best_answer_id;
-    return user.uid === post?.UID && !currentBestAnswerId;
+    return user.uid === post?.uid && !currentBestAnswerId;
   };
 
   if (!showFrame) return null;
@@ -402,30 +402,84 @@ export default function PostDetailModal({ post, isVisible, onClose, onAnimationC
                 </div>
                 
                 {/* 右半分：投稿詳細情報 */}
-                <div className="w-1/2 pl-4 flex flex-col space-y-4">
-                  {/* ユーザー情報と投稿日時 */}
+                <div className="w-1/2 pl-4 flex flex-col space-y-3">
+                  {/* タイトルとメインタグ */}
                   <div>
-                    <div className="flex items-center space-x-2 mb-1">
-                      <span className="font-semibold text-gray-800">
+                    <div className="mb-2">
+                      <div className="flex items-center space-x-2 mb-1">
+                        <span className="font-semibold text-gray-800">
+                          {post.title}
+                        </span>
+                        <span className="text-gray-600">
+                          {post.prefectures}
+                        </span>
+                        {/* メインタグ（タイトルのすぐ右側） */}
+                        {post.tag_list.filter(tag => tag.attribute).length > 0 && (
+                          <div className="flex flex-wrap gap-1 ml-2">
+                            {post.tag_list
+                              .filter(tag => tag.attribute)
+                              .map((tag, index) => {
+                                const displayName = mainTagMap[tag.name] || tag.name;
+                                return (
+                                  <span
+                                    key={index}
+                                    className="px-2 py-1 bg-blue-500 text-white text-xs font-medium rounded-full"
+                                  >
+                                    {displayName}
+                                  </span>
+                                );
+                              })}
+                          </div>
+                        )}
+                      </div>
+                      {/* ユーザー名 */}
+                      <div className="text-left text-sm text-gray-600">
                         {post.user_name || post.id}
-                      </span>
-                      <span className="text-gray-600">
-                        {post.prefectures}
-                      </span>
+                      </div>
+                      <div className="text-sm text-gray-500">
+                        {new Date(post.post_time).toLocaleDateString('ja-JP', {
+                          year: 'numeric',
+                          month: 'long',
+                          day: 'numeric',
+                          hour: '2-digit',
+                          minute: '2-digit'
+                        })}
+                      </div>
                     </div>
-                    <div className="text-sm text-gray-500">
-                      {new Date(post.post_time).toLocaleDateString('ja-JP', {
-                        year: 'numeric',
-                        month: 'long',
-                        day: 'numeric',
-                        hour: '2-digit',
-                        minute: '2-digit'
-                      })}
+                  </div>
+
+                  {/* サブタグ */}
+                  {post.tag_list.filter(tag => !tag.attribute).length > 0 && (
+                    <div>
+                      <div className="flex flex-wrap gap-2">
+                        {post.tag_list
+                          .filter(tag => !tag.attribute)
+                          .map((tag, index) => (
+                            <span
+                              key={index}
+                              className="px-2 py-1 bg-gray-100 text-gray-700 text-xs font-medium rounded-full border border-gray-300"
+                            >
+                              {tag.name}
+                            </span>
+                          ))}
+                      </div>
+                    </div>
+                  )}
+
+                  {/* 説明文（スクロール可能） */}
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      説明
+                    </label>
+                    <div className="p-3 bg-gray-50 rounded-lg border border-gray-200 max-h-32 overflow-y-auto">
+                      <p className="text-gray-700 text-sm whitespace-pre-wrap">
+                        {post.discription || "説明がありません。"}
+                      </p>
                     </div>
                   </div>
 
                   {/* 画像表示 */}
-                  <div className="w-full h-48 bg-gray-100 rounded-lg overflow-hidden">
+                  <div className="w-full h-40 bg-gray-100 rounded-lg overflow-hidden">
                     {post.ImageURL ? (
                       <img
                         src={post.ImageURL}
@@ -447,102 +501,50 @@ export default function PostDetailModal({ post, isVisible, onClose, onAnimationC
                     )}
                   </div>
 
-                  {/* ベストアンサー */}
+                  {/* ベストアンサー（小さく） */}
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                    <label className="block text-xs font-medium text-gray-700 mb-1">
                       ベストアンサー
                     </label>
-                    <div className="relative p-4 bg-gray-50 rounded-lg border border-gray-200">
+                    <div className="relative p-2 bg-gray-50 rounded border border-gray-200">
                       {post.best_answer_id ? (
                         <>
                           {/* ベストアンサーバッジ */}
-                          <div className="absolute -top-2 -right-2 w-10 h-10 bg-yellow-400 rounded-full flex items-center justify-center text-xs font-bold text-white border-2 border-white shadow-md transform rotate-[30deg]">
-                            BEST
+                          <div className="absolute -top-1 -right-1 w-6 h-6 bg-yellow-400 rounded-full flex items-center justify-center text-xs font-bold text-white border border-white shadow-sm transform rotate-[30deg]">
+                            B
                           </div>
                           {(() => {
                             const bestAnswer = post.comment.find(c => c.id === post.best_answer_id);
                             return bestAnswer ? (
                               <div>
-                                <div className="font-medium text-gray-800 mb-1">
+                                <div className="font-medium text-gray-800 mb-1 text-xs">
                                   {bestAnswer.name || '不明'}
                                 </div>
-                                <p className="text-gray-700 text-sm">
+                                <p className="text-gray-700 text-xs line-clamp-2">
                                   {bestAnswer.context}
                                 </p>
                               </div>
                             ) : (
-                              <p className="text-gray-500 text-sm">ベストアンサーが見つかりません</p>
+                              <p className="text-gray-500 text-xs">ベストアンサーが見つかりません</p>
                             );
                           })()}
                         </>
                       ) : (
-                        <p className="text-gray-500 text-sm">まだありません。</p>
+                        <p className="text-gray-500 text-xs">まだありません。</p>
                       )}
                     </div>
                   </div>
 
-                  {/* アチーブメント */}
+                  {/* アチーブメント（小さく） */}
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                    <label className="block text-xs font-medium text-gray-700 mb-1">
                       アチーブメント
                     </label>
-                    <div className="p-4 bg-gray-50 rounded-lg border border-gray-200">
+                    <div className="p-2 bg-gray-50 rounded border border-gray-200">
                       {post.achivement?.name ? (
-                        <p className="text-gray-700 text-sm">{post.achivement.name}</p>
+                        <p className="text-gray-700 text-xs">{post.achivement.name}</p>
                       ) : (
-                        <p className="text-gray-500 text-sm">アチーブメントはありません</p>
-                      )}
-                    </div>
-                  </div>
-
-                  {/* タグ表示 */}
-                  <div>
-                    <div className="space-y-3">
-                      {/* メインタグ（attribute: true） */}
-                      {post.tag_list.filter(tag => tag.attribute).length > 0 && (
-                        <div>
-                          <p className="text-xs text-gray-600 mb-1">メインタグ</p>
-                          <div className="flex flex-wrap gap-2">
-                            {post.tag_list
-                              .filter(tag => tag.attribute)
-                              .map((tag, index) => {
-                                // tag.nameがIDの場合はmainTagMapで変換、そうでなければそのまま表示
-                                const displayName = mainTagMap[tag.name] || tag.name;
-                                return (
-                                  <span
-                                    key={index}
-                                    className="px-3 py-1 bg-blue-500 text-white text-xs font-medium rounded-full"
-                                  >
-                                    {displayName}
-                                  </span>
-                                );
-                              })}
-                          </div>
-                        </div>
-                      )}
-                      
-                      {/* サブタグ（attribute: false） */}
-                      {post.tag_list.filter(tag => !tag.attribute).length > 0 && (
-                        <div>
-                          <p className="text-xs text-gray-600 mb-1">サブタグ</p>
-                          <div className="flex flex-wrap gap-2">
-                            {post.tag_list
-                              .filter(tag => !tag.attribute)
-                              .map((tag, index) => (
-                                <span
-                                  key={index}
-                                  className="px-3 py-1 bg-gray-100 text-gray-700 text-xs font-medium rounded-full border border-gray-300"
-                                >
-                                  {tag.name}
-                                </span>
-                              ))}
-                          </div>
-                        </div>
-                      )}
-                      
-                      {/* タグがない場合 */}
-                      {post.tag_list.length === 0 && (
-                        <p className="text-gray-500 text-sm">タグはありません</p>
+                        <p className="text-gray-500 text-xs">アチーブメントはありません</p>
                       )}
                     </div>
                   </div>
@@ -551,10 +553,10 @@ export default function PostDetailModal({ post, isVisible, onClose, onAnimationC
                   <div className="flex justify-end">
                     <button
                       onClick={handleLikePost}
-                      className="flex items-center space-x-2 px-4 py-2 rounded-lg hover:bg-gray-100 transition-colors"
+                      className="flex items-center space-x-2 px-3 py-1 rounded-lg hover:bg-gray-100 transition-colors"
                     >
                       <HandsClapping 
-                        size={20} 
+                        size={16} 
                         className={`${isPostLiked ? 'text-blue-500 fill-blue-500' : 'text-gray-500'} transition-colors`} 
                       />
                       <span className="text-sm font-medium">
